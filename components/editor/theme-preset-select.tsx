@@ -76,10 +76,11 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
     [presets]
   );
   const value = presetNames?.find((name) => name === currentPreset);
-  const currentIndex = useMemo(
-    () => presetNames.indexOf(value || "default"),
-    [presetNames, value]
-  );
+  const currentIndex =
+    useMemo(
+      () => presetNames.indexOf(value || "default"),
+      [presetNames, value]
+    ) ?? 0;
 
   const randomize = useCallback(() => {
     const random = Math.floor(Math.random() * presetNames.length);
@@ -129,7 +130,7 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
                 "w-full md:min-w-56 min-h-14 rounded-none justify-between group relative",
                 (!value || value === "default") &&
                   !hasChangedThemeFromDefault &&
-                  "ring-2 ring-offset-1 ring-offset-background ring-primary/30 animate-pulse"
+                  "bg-muted/30 animate-pulse"
               )}
             >
               <div className="flex items-center gap-3">
