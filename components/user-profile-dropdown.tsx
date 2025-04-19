@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,90 +12,114 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Loader2 } from "lucide-react";
+import { AuthDialog } from "@/app/(auth)/components/auth-dialog";
 
 export function UserProfileDropdown() {
-  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const [initialAuthMode, setInitialAuthMode] = useState<"signin" | "signup">(
+    "signin"
+  );
 
   return (
-    <AnimatePresence mode="wait">
-      {isPending ? (
-        <motion.div
-          key="spinner"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="size-8 flex items-center justify-center"
-        >
-          <Loader2 className="size-7 animate-spin text-muted-foreground" />
-        </motion.div>
-      ) : !session?.user ? (
-        <motion.div
-          key="auth-buttons"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex gap-3.5"
-        >
-          <Button
-            variant="link"
-            onClick={() => router.push("/signin")}
-            className="text-foreground hover:text-primary hover:no-underline px-0"
+    <>
+      <AnimatePresence mode="wait">
+        {isPending ? (
+          <motion.div
+            key="spinner"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="size-8 flex items-center justify-center"
           >
-            Sign In
-          </Button>
-          <Button onClick={() => router.push("/signup")}>Sign Up</Button>
-        </motion.div>
-      ) : (
-        <motion.div
-          key="user-dropdown"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={session.user.image || ""}
-                    alt={session.user.name || ""}
-                  />
-                  <AvatarFallback>
-                    {session.user.name?.[0] || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {session.user.name}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {session.user.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={async () => {
-                  await authClient.signOut();
-                }}
-              >
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            <Loader2 className="size-7 animate-spin text-muted-foreground" />
+          </motion.div>
+        ) : !session?.user ? (
+          <motion.div
+            key="auth-buttons"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex gap-3.5"
+          >
+            <Button
+              variant="link"
+              onClick={() => {
+                setInitialAuthMode("signin");
+                setIsAuthDialogOpen(true);
+              }}
+              className="text-foreground hover:text-primary hover:no-underline px-0"
+            >
+              Sign In
+            </Button>
+            <Button
+              onClick={() => {
+                setInitialAuthMode("signup");
+                setIsAuthDialogOpen(true);
+              }}
+            >
+              Sign Up
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="user-dropdown"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex"
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={session.user.image || ""}
+                      alt={session.user.name || ""}
+                    />
+                    <AvatarFallback>
+                      {session.user.name?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {session.user.name}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {session.user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await authClient.signOut();
+                  }}
+                >
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AuthDialog
+        open={isAuthDialogOpen}
+        onOpenChange={setIsAuthDialogOpen}
+        initialMode={initialAuthMode}
+      />
+    </>
   );
 }
