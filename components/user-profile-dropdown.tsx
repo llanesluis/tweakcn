@@ -15,6 +15,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { Loader2 } from "lucide-react";
 import { AuthDialog } from "@/app/(auth)/components/auth-dialog";
+import Link from "next/link";
 
 export function UserProfileDropdown() {
   const { data: session, isPending } = authClient.useSession();
@@ -103,6 +104,9 @@ export function UserProfileDropdown() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {
                     await authClient.signOut();

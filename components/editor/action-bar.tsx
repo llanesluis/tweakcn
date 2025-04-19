@@ -2,7 +2,16 @@
 
 import { useEditorStore } from "@/store/editor-store";
 import { Button } from "../ui/button";
-import { FileCode, RefreshCw, Code, Moon, Sun, Save } from "lucide-react";
+import {
+  FileCode,
+  RefreshCw,
+  Code,
+  Moon,
+  Sun,
+  Save,
+  Bookmark,
+  Loader2,
+} from "lucide-react";
 import CssImportDialog from "./css-import-dialog";
 import { useState } from "react";
 import { parseCssInput } from "@/utils/parse-css-input";
@@ -16,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { type ThemeStyles } from "@/types/theme";
 import { AuthDialog } from "@/app/(auth)/components/auth-dialog";
 import { useThemes } from "@/hooks/use-theme-actions";
+import { cn } from "@/lib/utils";
 
 export function ActionBar() {
   const {
@@ -134,25 +144,23 @@ export function ActionBar() {
 
           <Separator orientation="vertical" className="h-8" />
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button
-                variant="secondary"
+                variant="ghost"
                 size="sm"
-                className="h-8 px-2 gap-1.5"
+                className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 onClick={handleSave}
                 disabled={isCreatingTheme}
               >
-                <Save
-                  className={`size-3.5 ${
-                    isCreatingTheme ? "animate-spin" : ""
-                  }`}
-                />
-                <span className="text-sm">
-                  {isCreatingTheme ? "Saving..." : "Save"}
-                </span>
+                {isCreatingTheme ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Bookmark className="size-3.5" />
+                )}
+                Save
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Save current theme</TooltipContent>
+            <TooltipContent>Save theme</TooltipContent>
           </Tooltip>
 
           <Tooltip>
