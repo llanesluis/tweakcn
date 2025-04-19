@@ -117,7 +117,7 @@ async function deleteThemeFetcher(url: string): Promise<void> {
   await fetcher<void>(url, { method: "DELETE" });
 }
 
-export function useThemes() {
+export function useThemeActions() {
   const [isAuthRequired, setIsAuthRequired] = useState(false);
 
   const [createState, setCreateState] = useState<MutationState<Theme>>({
@@ -215,9 +215,9 @@ export function useThemes() {
       setDeleteState,
       (result) => {
         if (result.success) {
+          handleMutationSuccess(result.theme, "Deleted");
           toast({
-            title: "Theme Deleted",
-            description: "Theme deleted successfully.",
+            title: "Theme Deleted Successfully",
           });
           return true;
         }

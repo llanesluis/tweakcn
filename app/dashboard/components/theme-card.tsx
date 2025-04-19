@@ -9,14 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Trash2, Edit, Share } from "lucide-react";
+import { MoreVertical, Trash2, Edit, Share, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { useEditorStore } from "@/store/editor-store";
-
+import { useThemeActions } from "@/hooks/use-theme-actions";
 interface ThemeCardProps {
   theme: Theme;
   className?: string;
-  onDelete?: (theme: Theme) => void;
   onEdit?: (theme: Theme) => void;
   onShare?: (theme: Theme) => void;
 }
@@ -36,17 +35,20 @@ const swatchDefinitions: SwatchDefinition[] = [
   // Special case: Background swatch shows "Foreground" text using the main foreground color
   { name: "Background", bgKey: "background", fgKey: "foreground" },
 ];
-// --- End of swatch mapping ---
 
 export function ThemeCard({
   theme,
   className,
-  onDelete,
   onEdit,
   onShare,
 }: ThemeCardProps) {
   const { themeState } = useEditorStore();
+  const { deleteTheme, isDeletingTheme } = useThemeActions();
   const mode = themeState.currentMode;
+
+  const handleDelete = () => {
+    deleteTheme(theme.id);
+  };
 
   const colorSwatches = useMemo(() => {
     return swatchDefinitions.map((def) => ({
@@ -120,10 +122,15 @@ export function ThemeCard({
               Share Theme
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onDelete?.(theme)}
+              onClick={handleDelete}
               className="text-destructive gap-2 focus:text-destructive"
+              disabled={isDeletingTheme}
             >
-              <Trash2 className="h-4 w-4" />
+              {isDeletingTheme ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
               Delete Theme
             </DropdownMenuItem>
           </DropdownMenuContent>

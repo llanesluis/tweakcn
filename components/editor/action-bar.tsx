@@ -24,7 +24,7 @@ import ContrastChecker from "./contrast-checker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { type ThemeStyles } from "@/types/theme";
 import { AuthDialog } from "@/app/(auth)/components/auth-dialog";
-import { useThemes } from "@/hooks/use-theme-actions";
+import { useThemeActions } from "@/hooks/use-theme-actions";
 import { cn } from "@/lib/utils";
 
 export function ActionBar() {
@@ -38,7 +38,7 @@ export function ActionBar() {
   const [codePanelOpen, setCodePanelOpen] = useState(false);
 
   const { createTheme, isCreatingTheme, isAuthRequired, setIsAuthRequired } =
-    useThemes();
+    useThemeActions();
 
   const handleCssImport = (css: string) => {
     const { lightColors, darkColors } = parseCssInput(css);

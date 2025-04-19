@@ -227,7 +227,7 @@ export async function deleteTheme(themeId: string) {
       return { success: false, error: "Theme not found or not owned by user" };
     }
 
-    revalidatePath("/"); // Or a more specific path
+    revalidatePath("/dashboard"); // Or a more specific path
     return { success: true, deletedId: themeId };
   } catch (error) {
     console.error(`Error deleting theme ${themeId}:`, error);
