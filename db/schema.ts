@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { type ThemeStyles } from "@/types/theme"; // Corrected import path
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -52,4 +53,15 @@ export const verification = sqliteTable("verification", {
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }),
   updatedAt: integer("updated_at", { mode: "timestamp" }),
+});
+
+export const theme = sqliteTable("theme", {
+  id: text("id").primaryKey(), // Consider using a UUID generator
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  styles: text("styles", { mode: "json" }).$type<ThemeStyles>().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
