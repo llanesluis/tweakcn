@@ -20,7 +20,6 @@ interface ThemeCardProps {
   onShare?: (theme: Theme) => void;
 }
 
-// --- Define the mapping for swatches ---
 type SwatchDefinition = {
   name: string; // Text to display on hover
   bgKey: keyof Theme["styles"]["light" | "dark"]; // Key for background color
@@ -102,6 +101,13 @@ export function ThemeCard({
           <h3 className={cn("text-sm font-medium text-foreground")}>
             {theme.name}
           </h3>
+          <p className="text-xs text-muted-foreground">
+            {new Date(theme.createdAt).toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100">

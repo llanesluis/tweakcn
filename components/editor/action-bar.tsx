@@ -26,6 +26,8 @@ import { type ThemeStyles } from "@/types/theme";
 import { AuthDialog } from "@/app/(auth)/components/auth-dialog";
 import { useThemeActions } from "@/hooks/use-theme-actions";
 import { cn } from "@/lib/utils";
+import { ThemeSaveDialog } from "./theme-save-dialog";
+import { authClient } from "@/lib/auth-client";
 
 export function ActionBar() {
   const {
@@ -36,6 +38,8 @@ export function ActionBar() {
   } = useEditorStore();
   const [cssImportOpen, setCssImportOpen] = useState(false);
   const [codePanelOpen, setCodePanelOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const { data: session } = authClient.useSession();
 
   const { createTheme, isCreatingTheme, isAuthRequired, setIsAuthRequired } =
     useThemeActions();
@@ -66,8 +70,16 @@ export function ActionBar() {
     toggleTheme({ x, y });
   };
 
-  const handleSave = async () => {
-    const themeName = "Custom random theme";
+  const handleSaveClick = () => {
+    if (!session) {
+      setIsAuthRequired(true);
+      return;
+    }
+
+    setSaveDialogOpen(true);
+  };
+
+  const saveTheme = async (themeName: string) => {
     const themeData = {
       name: themeName,
       styles: themeState.styles as ThemeStyles,
@@ -75,7 +87,7 @@ export function ActionBar() {
 
     try {
       await createTheme(themeData);
-      console.log("Theme save triggered via hook.");
+      setSaveDialogOpen(false);
     } catch (error) {
       console.error(
         "Save operation failed (error likely handled by hook):",
@@ -149,7 +161,7 @@ export function ActionBar() {
                 variant="ghost"
                 size="sm"
                 className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                onClick={handleSave}
+                onClick={handleSaveClick}
                 disabled={isCreatingTheme}
               >
                 {isCreatingTheme ? (
@@ -157,7 +169,7 @@ export function ActionBar() {
                 ) : (
                   <Bookmark className="size-3.5" />
                 )}
-                Save
+                <span className="text-sm">Save</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Save theme</TooltipContent>
@@ -189,6 +201,13 @@ export function ActionBar() {
         open={codePanelOpen}
         onOpenChange={setCodePanelOpen}
         themeEditorState={themeState}
+      />
+      <ThemeSaveDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        onSave={saveTheme}
+        isSaving={isCreatingTheme}
+        currentStyles={themeState.styles}
       />
       <AuthDialog open={isAuthRequired} onOpenChange={setIsAuthRequired} />
     </div>
