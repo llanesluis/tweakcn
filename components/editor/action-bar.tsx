@@ -13,30 +13,9 @@ import * as SwitchPrimitives from "@radix-ui/react-switch";
 import { useTheme } from "../theme-provider";
 import ContrastChecker from "./contrast-checker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { type ThemeEditorState, type ThemeStyles } from "@/types/theme";
-import useSWRMutation from "swr/mutation";
-
-// Define the fetcher function for the mutation outside the component
-async function saveThemeFetcher(
-  url: string,
-  { arg }: { arg: { name: string; styles: ThemeStyles } }
-) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(arg),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    // Throw an error to be caught by useSWRMutation
-    throw new Error(errorData.error || "Failed to save theme");
-  }
-
-  return response.json();
-}
+import { type ThemeStyles } from "@/types/theme";
+import { AuthDialog } from "@/app/(auth)/components/auth-dialog";
+import { useThemes } from "@/hooks/use-theme-actions";
 
 export function ActionBar() {
   const {
@@ -47,6 +26,9 @@ export function ActionBar() {
   } = useEditorStore();
   const [cssImportOpen, setCssImportOpen] = useState(false);
   const [codePanelOpen, setCodePanelOpen] = useState(false);
+
+  const { createTheme, isCreatingTheme, isAuthRequired, setIsAuthRequired } =
+    useThemes();
 
   const handleCssImport = (css: string) => {
     const { lightColors, darkColors } = parseCssInput(css);
@@ -74,39 +56,22 @@ export function ActionBar() {
     toggleTheme({ x, y });
   };
 
-  // Use the SWR mutation hook
-  const { trigger, isMutating } = useSWRMutation(
-    "/api/themes",
-    saveThemeFetcher
-  );
-
   const handleSave = async () => {
-    // User hardcoded this for now
     const themeName = "Custom random theme";
     const themeData = {
       name: themeName,
-      // Make sure themeState.styles matches ThemeStyles type
       styles: themeState.styles as ThemeStyles,
     };
 
     try {
-      const savedTheme = await trigger(themeData);
-      console.log("Theme saved:", savedTheme);
-      toast({
-        title: "Theme Saved",
-        description: `Theme "${themeName}" saved successfully.`,
-      });
-      // Optionally reset state or indicate saved status here
-      // e.g., update zustand store state if needed
-    } catch (error: any) {
-      console.error("Failed to save theme:", error);
-      toast({
-        title: "Save Failed",
-        description: error.message || "Could not save the theme.",
-        variant: "destructive",
-      });
+      await createTheme(themeData);
+      console.log("Theme save triggered via hook.");
+    } catch (error) {
+      console.error(
+        "Save operation failed (error likely handled by hook):",
+        error
+      );
     }
-    // isMutating handles the loading state from the hook
   };
 
   return (
@@ -175,13 +140,15 @@ export function ActionBar() {
                 size="sm"
                 className="h-8 px-2 gap-1.5"
                 onClick={handleSave}
-                disabled={isMutating}
+                disabled={isCreatingTheme}
               >
                 <Save
-                  className={`size-3.5 ${isMutating ? "animate-spin" : ""}`}
+                  className={`size-3.5 ${
+                    isCreatingTheme ? "animate-spin" : ""
+                  }`}
                 />
                 <span className="text-sm">
-                  {isMutating ? "Saving..." : "Save"}
+                  {isCreatingTheme ? "Saving..." : "Save"}
                 </span>
               </Button>
             </TooltipTrigger>
@@ -215,6 +182,7 @@ export function ActionBar() {
         onOpenChange={setCodePanelOpen}
         themeEditorState={themeState}
       />
+      <AuthDialog open={isAuthRequired} onOpenChange={setIsAuthRequired} />
     </div>
   );
 }

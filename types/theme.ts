@@ -1,3 +1,6 @@
+import { theme } from "@/db/schema";
+import { InferSelectModel } from "drizzle-orm";
+
 export interface ThemeStyleProps {
   background: string;
   foreground: string;
@@ -74,3 +77,5 @@ export type ThemePreset = {
     dark?: Partial<ThemeStyleProps>;
   };
 };
+
+export type Theme = InferSelectModel<typeof theme>;
