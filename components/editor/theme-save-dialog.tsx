@@ -11,8 +11,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useRef } from "react";
 import { Loader2 } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const formSchema = z.object({
+  themeName: z.string().min(1, "Theme name cannot be empty."),
+});
 
 interface ThemeSaveDialogProps {
   open: boolean;
@@ -27,53 +43,71 @@ export function ThemeSaveDialog({
   onSave,
   isSaving,
 }: ThemeSaveDialogProps) {
-  const [themeName, setThemeName] = useState("");
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      themeName: "",
+    },
+  });
 
-  const handleSave = async () => {
-    if (!themeName.trim()) return;
-    await onSave(themeName);
-    setThemeName("");
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    onSave(values.themeName);
+  };
+
+  // Reset form when dialog closes or opens with different state
+  // This avoids showing old validation errors or values
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      form.reset();
+    }
+    onOpenChange(newOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Save Theme</DialogTitle>
-          <DialogDescription>
-            Enter a name for your theme so you can find it later.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="name"
-              value={themeName}
-              onChange={(e) => setThemeName(e.target.value)}
-              className="col-span-3"
-              placeholder="My Awesome Theme"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <DialogHeader>
+              <DialogTitle>Save Theme</DialogTitle>
+              <DialogDescription>
+                Enter a name for your theme so you can find it later.
+              </DialogDescription>
+            </DialogHeader>
+            <FormField
+              control={form.control}
+              name="themeName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="My Awesome Theme" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button
-            type="submit"
-            onClick={handleSave}
-            disabled={isSaving || !themeName.trim()}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-1 size-4 animate-spin" />
-                Saving
-              </>
-            ) : (
-              "Save Theme"
-            )}
-          </Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button
+                type="submit"
+                disabled={
+                  isSaving ||
+                  !form.formState.isValid ||
+                  form.formState.isSubmitting
+                }
+              >
+                {isSaving || form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-1 size-4 animate-spin" />
+                    Saving
+                  </>
+                ) : (
+                  "Save Theme"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

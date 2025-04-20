@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { parseCssInput } from "@/utils/parse-css-input";
-import { toast } from "../../ui/use-toast";
-import { CodePanelDialog } from "../code-panel-dialog";
-import CssImportDialog from "../css-import-dialog";
-import { ThemeSaveDialog } from "../theme-save-dialog";
+import { toast } from "@/hooks/use-toast";
+import { CodePanelDialog } from "@/components/editor/code-panel-dialog";
+import CssImportDialog from "@/components/editor/css-import-dialog";
+import { ThemeSaveDialog } from "@/components/editor/theme-save-dialog";
 import { authClient } from "@/lib/auth-client";
 import { useAuthStore } from "@/store/auth-store";
 import { usePostLoginAction } from "@/hooks/use-post-login-action";
 import { useThemeActions } from "@/hooks/use-theme-actions";
-import { ActionBarButtons } from "./components/action-bar-buttons";
+import { ActionBarButtons } from "@/components/editor/action-bar/components/action-bar-buttons";
 
 export function ActionBar() {
   const { themeState, setThemeState } = useEditorStore();
@@ -62,7 +62,9 @@ export function ActionBar() {
 
     try {
       await createTheme(themeData);
-      setSaveDialogOpen(false);
+      setTimeout(() => {
+        setSaveDialogOpen(false);
+      }, 50);
     } catch (error) {
       console.error(
         "Save operation failed (error likely handled by hook):",
