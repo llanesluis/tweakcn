@@ -104,6 +104,24 @@ export async function getThemes() {
   }
 }
 
+export async function getTheme(themeId: string) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const theme = await db
+      .select()
+      .from(themeTable)
+      .where(and(eq(themeTable.id, themeId), eq(themeTable.userId, userId)));
+    return theme;
+  } catch (error) {
+    console.error("Error fetching theme:", error);
+    throw new Error("Failed to fetch theme.");
+  }
+}
+
 // Action to create a new theme
 export async function createTheme(formData: {
   name: string;

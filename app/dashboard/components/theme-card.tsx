@@ -13,6 +13,8 @@ import { MoreVertical, Trash2, Edit, Share, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { useThemeActions } from "@/hooks/use-theme-actions";
+import Link from "next/link";
+
 interface ThemeCardProps {
   theme: Theme;
   className?: string;
@@ -116,9 +118,11 @@ export function ThemeCard({
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-popover">
-            <DropdownMenuItem onClick={() => onEdit?.(theme)} className="gap-2">
-              <Edit className="h-4 w-4" />
-              Open in Editor
+            <DropdownMenuItem asChild className="gap-2">
+              <Link href={`/editor/theme?id=${theme.id}`}>
+                <Edit className="h-4 w-4" />
+                Open in Editor
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onShare?.(theme)}
