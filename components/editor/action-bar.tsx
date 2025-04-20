@@ -8,7 +8,6 @@ import {
   Code,
   Moon,
   Sun,
-  Save,
   Bookmark,
   Loader2,
 } from "lucide-react";
@@ -23,11 +22,11 @@ import { useTheme } from "../theme-provider";
 import ContrastChecker from "./contrast-checker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { type ThemeStyles } from "@/types/theme";
-import { AuthDialog } from "@/app/(auth)/components/auth-dialog";
 import { useThemeActions } from "@/hooks/use-theme-actions";
 import { cn } from "@/lib/utils";
 import { ThemeSaveDialog } from "./theme-save-dialog";
 import { authClient } from "@/lib/auth-client";
+import { useAuthStore } from "@/store/auth-store";
 
 export function ActionBar() {
   const {
@@ -40,6 +39,7 @@ export function ActionBar() {
   const [codePanelOpen, setCodePanelOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const { data: session } = authClient.useSession();
+  const { openAuthDialog } = useAuthStore();
 
   const { createTheme, isCreatingTheme, isAuthRequired, setIsAuthRequired } =
     useThemeActions();
@@ -72,7 +72,7 @@ export function ActionBar() {
 
   const handleSaveClick = () => {
     if (!session) {
-      setIsAuthRequired(true);
+      openAuthDialog("signin");
       return;
     }
 
@@ -209,7 +209,6 @@ export function ActionBar() {
         isSaving={isCreatingTheme}
         currentStyles={themeState.styles}
       />
-      <AuthDialog open={isAuthRequired} onOpenChange={setIsAuthRequired} />
     </div>
   );
 }
