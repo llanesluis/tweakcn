@@ -23,10 +23,10 @@ import ContrastChecker from "./contrast-checker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { type ThemeStyles } from "@/types/theme";
 import { useThemeActions } from "@/hooks/use-theme-actions";
-import { cn } from "@/lib/utils";
 import { ThemeSaveDialog } from "./theme-save-dialog";
 import { authClient } from "@/lib/auth-client";
 import { useAuthStore } from "@/store/auth-store";
+import { usePostLoginAction } from "@/hooks/use-post-login-action";
 
 export function ActionBar() {
   const {
@@ -41,8 +41,12 @@ export function ActionBar() {
   const { data: session } = authClient.useSession();
   const { openAuthDialog } = useAuthStore();
 
-  const { createTheme, isCreatingTheme, isAuthRequired, setIsAuthRequired } =
-    useThemeActions();
+  // This is a post-login action that will open the save dialog when a user successfully logs in
+  usePostLoginAction("SAVE_THEME", () => {
+    setSaveDialogOpen(true);
+  });
+
+  const { createTheme, isCreatingTheme } = useThemeActions();
 
   const handleCssImport = (css: string) => {
     const { lightColors, darkColors } = parseCssInput(css);
@@ -72,7 +76,7 @@ export function ActionBar() {
 
   const handleSaveClick = () => {
     if (!session) {
-      openAuthDialog("signin");
+      openAuthDialog("signin", "SAVE_THEME");
       return;
     }
 
@@ -207,7 +211,6 @@ export function ActionBar() {
         onOpenChange={setSaveDialogOpen}
         onSave={saveTheme}
         isSaving={isCreatingTheme}
-        currentStyles={themeState.styles}
       />
     </div>
   );

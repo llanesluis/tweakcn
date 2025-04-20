@@ -8,20 +8,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { type ThemeStyles } from "@/types/theme";
 
 interface ThemeSaveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (themeName: string) => Promise<void>;
   isSaving: boolean;
-  currentStyles: ThemeStyles;
 }
 
 export function ThemeSaveDialog({
@@ -29,7 +26,6 @@ export function ThemeSaveDialog({
   onOpenChange,
   onSave,
   isSaving,
-  currentStyles,
 }: ThemeSaveDialogProps) {
   const [themeName, setThemeName] = useState("");
 
