@@ -119,7 +119,7 @@ export function ThemeCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-popover">
             <DropdownMenuItem asChild className="gap-2">
-              <Link href={`/editor/theme?id=${theme.id}`}>
+              <Link href={`/editor/theme/${theme.id}`}>
                 <Edit className="h-4 w-4" />
                 Open in Editor
               </Link>

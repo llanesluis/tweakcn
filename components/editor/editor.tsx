@@ -15,13 +15,12 @@ import {
 import { ThemeStyles } from "@/types/theme";
 import { Sliders, Loader2 } from "lucide-react";
 import { useEditorStore } from "@/store/editor-store";
-import { useQueryState } from "nuqs";
 import { getTheme } from "@/actions/themes";
 import { Theme } from "@/types/theme";
 
 interface EditorProps {
   config: EditorConfig;
-  initialState?: BaseEditorState;
+  themeId?: string;
 }
 
 const isThemeStyles = (styles: unknown): styles is ThemeStyles => {
@@ -34,11 +33,10 @@ const isThemeStyles = (styles: unknown): styles is ThemeStyles => {
   );
 };
 
-const Editor: React.FC<EditorProps> = ({ config }) => {
+const Editor: React.FC<EditorProps> = ({ config, themeId }) => {
   const { themeState, setThemeState } = useEditorStore();
   const Controls = config.controls;
   const Preview = config.preview;
-  const [themeId] = useQueryState("id");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
