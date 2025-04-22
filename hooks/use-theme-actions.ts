@@ -7,6 +7,7 @@ import {
   deleteTheme as deleteThemeAction,
 } from "@/actions/themes";
 import { Theme } from "@/types/theme";
+import { tryCatch } from "@/utils/try-catch";
 
 type MutationState<T> = {
   isLoading: boolean;
@@ -86,37 +87,6 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   return response.json();
 }
 
-// --- Mutation Fetchers ---
-
-// POST /api/themes
-async function createThemeFetcher(
-  url: string,
-  { arg }: { arg: { name: string; styles: ThemeStyles } }
-): Promise<Theme> {
-  return fetcher<Theme>(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(arg),
-  });
-}
-
-// PUT /api/themes/[themeId]
-async function updateThemeFetcher(
-  url: string, // The full URL including themeId
-  { arg }: { arg: { name?: string; styles?: ThemeStyles } }
-): Promise<Theme> {
-  return fetcher<Theme>(url, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(arg),
-  });
-}
-
-// DELETE /api/themes/[themeId]
-async function deleteThemeFetcher(url: string): Promise<void> {
-  await fetcher<void>(url, { method: "DELETE" });
-}
-
 export function useThemeActions() {
   const [isAuthRequired, setIsAuthRequired] = useState(false);
 
@@ -146,29 +116,29 @@ export function useThemeActions() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     setIsAuthRequired(false);
 
-    try {
-      const result = await action();
+    const [error, result] = await tryCatch(action());
 
-      if (result.success) {
-        const data = successHandler(result);
-        setState((prev) => ({ ...prev, isLoading: false, data }));
-        return data;
-      } else {
-        const error = new Error(result.error || "Operation failed");
-        setState((prev) => ({ ...prev, isLoading: false, error }));
-        toast({
-          title: "Operation Failed",
-          description: result.error || "Could not complete the operation.",
-          variant: "destructive",
-        });
-        return null;
-      }
-    } catch (error: any) {
+    if (error) {
       handleMutationError(
         error,
         (err) => setState((prev) => ({ ...prev, error: err })),
         setIsAuthRequired
       );
+      return null;
+    }
+
+    if (result.success) {
+      const data = successHandler(result);
+      setState((prev) => ({ ...prev, isLoading: false, data }));
+      return data;
+    } else {
+      const error = new Error(result.error || "Operation failed");
+      setState((prev) => ({ ...prev, isLoading: false, error }));
+      toast({
+        title: "Operation Failed",
+        description: result.error || "Could not complete the operation.",
+        variant: "destructive",
+      });
       return null;
     }
   };
