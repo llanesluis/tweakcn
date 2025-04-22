@@ -10,6 +10,8 @@ import { useGithubStars } from "@/hooks/use-github-stars";
 import { SocialLink } from "@/components/social-link";
 import { Separator } from "@/components/ui/separator";
 import { UserProfileDropdown } from "@/components/user-profile-dropdown";
+import { formatCompactNumber } from "@/utils/format";
+
 export function Header() {
   const { stargazersCount } = useGithubStars("jnsahaj", "tweakcn");
 
@@ -23,7 +25,15 @@ export function Header() {
           </Link>
         </div>
         <div className="flex items-center gap-3.5">
-          <div className="flex items-center gap-3.5">
+          <SocialLink
+            href="https://github.com/jnsahaj/tweakcn"
+            className="flex items-center gap-2 text-sm font-bold"
+          >
+            <GitHubIcon className="size-4" />
+            {stargazersCount > 0 && formatCompactNumber(stargazersCount)}
+          </SocialLink>
+          <Separator orientation="vertical" className="h-8" />
+          <div className="hidden md:flex items-center gap-3.5">
             <SocialLink
               href="https://github.com/jnsahaj/tweakcn"
               className="flex items-center gap-2 text-sm font-bold"
