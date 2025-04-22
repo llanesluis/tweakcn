@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -35,6 +35,10 @@ interface ThemeSaveDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (themeName: string) => Promise<void>;
   isSaving: boolean;
+  initialThemeName?: string;
+  ctaLabel?: string;
+  title?: string;
+  description?: string;
 }
 
 export function ThemeSaveDialog({
@@ -42,11 +46,15 @@ export function ThemeSaveDialog({
   onOpenChange,
   onSave,
   isSaving,
+  initialThemeName = "",
+  ctaLabel = "Save Theme",
+  title = "Save Theme",
+  description = "Enter a name for your theme so you can find it later.",
 }: ThemeSaveDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      themeName: "",
+      themeName: initialThemeName,
     },
   });
 
@@ -54,12 +62,13 @@ export function ThemeSaveDialog({
     onSave(values.themeName);
   };
 
-  // Reset form when dialog closes or opens with different state
-  // This avoids showing old validation errors or values
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      form.reset();
+  useEffect(() => {
+    if (open) {
+      form.reset({ themeName: initialThemeName });
     }
+  }, [open, initialThemeName, form]);
+
+  const handleOpenChange = (newOpen: boolean) => {
     onOpenChange(newOpen);
   };
 
@@ -69,10 +78,8 @@ export function ThemeSaveDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <DialogHeader>
-              <DialogTitle>Save Theme</DialogTitle>
-              <DialogDescription>
-                Enter a name for your theme so you can find it later.
-              </DialogDescription>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
             </DialogHeader>
             <FormField
               control={form.control}
@@ -102,7 +109,7 @@ export function ThemeSaveDialog({
                     Saving
                   </>
                 ) : (
-                  "Save Theme"
+                  ctaLabel
                 )}
               </Button>
             </DialogFooter>

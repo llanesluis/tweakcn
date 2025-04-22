@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, use } from "react";
+import React, { use } from "react";
 import { ThemeEditorControlsProps, ThemeStyleProps } from "@/types/theme";
 import ControlSection from "./control-section";
 import ColorPicker from "./color-picker";
@@ -30,6 +30,7 @@ import { AlertCircle } from "lucide-react";
 import ShadowControl from "./shadow-control";
 import TabsTriggerPill from "./theme-preview/tabs-trigger-pill";
 import ThemeEditActions from "./theme-edit-actions";
+import { useRouter } from "next/navigation";
 
 const ThemeControlPanel = ({
   styles,
@@ -80,6 +81,7 @@ const ThemeControlPanel = ({
   }
 
   const radius = parseFloat(currentStyles.radius.replace("rem", ""));
+  const router = useRouter();
 
   const theme = use(themePromise);
 
@@ -93,13 +95,7 @@ const ThemeControlPanel = ({
             onPresetChange={applyThemePreset}
           />
         ) : (
-          <Suspense>
-            <ThemeEditActions
-              themeName={theme.name}
-              onCancel={() => setIsEditing(false)}
-              onSave={() => setIsEditing(true)}
-            />
-          </Suspense>
+          <ThemeEditActions theme={theme} />
         )}
       </div>
       <div className="space-y-4 min-h-0 flex-1 flex flex-col">
