@@ -144,6 +144,20 @@ export async function createTheme(formData: {
     };
   }
 
+  // Check if user already has 10 themes
+  const userThemes = await db
+    .select()
+    .from(themeTable)
+    .where(eq(themeTable.userId, userId));
+
+  if (userThemes.length >= 10) {
+    return {
+      success: false,
+      error: "Theme limit reached",
+      message: "You cannot have more than 10 themes yet.",
+    };
+  }
+
   const { name, styles } = validation.data;
   const newThemeId = cuid();
   const now = new Date();
