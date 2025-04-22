@@ -82,7 +82,7 @@ export function AuthDialog({
           <p className="text-center text-muted-foreground">
             {isSignIn
               ? "Sign in to your account to continue"
-              : "Sign up to get started with our platform"}
+              : "Sign up to get started with tweakcn"}
           </p>
         </DialogHeader>
 
@@ -144,9 +144,7 @@ export function AuthDialog({
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-muted px-2 text-muted-foreground">
-                  {isSignIn
-                    ? "New to our platform?"
-                    : "Already have an account?"}
+                  {isSignIn ? "New to tweakcn?" : "Already have an account?"}
                 </span>
               </div>
             </div>
