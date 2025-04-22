@@ -34,9 +34,18 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
 
   const initialTheme = themePromise ? use(themePromise) : null;
 
-  const handleStyleChange = (newStyles: ThemeStyles) => {
-    setThemeState({ ...themeState, styles: newStyles });
-  };
+  const handleStyleChange = React.useCallback(
+    (newStyles: ThemeStyles) => {
+      setThemeState({ ...themeState, styles: newStyles });
+    },
+    [themeState, setThemeState]
+  );
+
+  useEffect(() => {
+    if (initialTheme && isThemeStyles(initialTheme.styles)) {
+      handleStyleChange(initialTheme.styles);
+    }
+  }, [initialTheme, handleStyleChange]);
 
   if (initialTheme && !isThemeStyles(initialTheme.styles)) {
     return (
@@ -45,12 +54,6 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
       </div>
     );
   }
-
-  useEffect(() => {
-    if (initialTheme && isThemeStyles(initialTheme.styles)) {
-      handleStyleChange(initialTheme.styles);
-    }
-  }, [initialTheme]);
 
   const styles = themeState.styles;
 

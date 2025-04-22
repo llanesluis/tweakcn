@@ -6,7 +6,6 @@ import { SaveButton } from "./save-button";
 import { CodeButton } from "./code-button";
 import ContrastChecker from "@/components/editor/contrast-checker";
 import { useEditorStore } from "@/store/editor-store";
-import { useTheme } from "@/components/theme-provider";
 
 interface ActionBarButtonsProps {
   onImportClick: () => void;

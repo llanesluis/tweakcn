@@ -30,7 +30,6 @@ import { AlertCircle } from "lucide-react";
 import ShadowControl from "./shadow-control";
 import TabsTriggerPill from "./theme-preview/tabs-trigger-pill";
 import ThemeEditActions from "./theme-edit-actions";
-import { useRouter } from "next/navigation";
 
 const ThemeControlPanel = ({
   styles,
@@ -39,7 +38,6 @@ const ThemeControlPanel = ({
   themePromise,
 }: ThemeEditorControlsProps) => {
   const { applyThemePreset, themeState } = useEditorStore();
-  const [isEditing, setIsEditing] = React.useState(false);
 
   const currentStyles = React.useMemo(
     () => ({
@@ -81,7 +79,6 @@ const ThemeControlPanel = ({
   }
 
   const radius = parseFloat(currentStyles.radius.replace("rem", ""));
-  const router = useRouter();
 
   const theme = use(themePromise);
 

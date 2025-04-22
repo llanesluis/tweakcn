@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Trash2, Edit, Share, Loader2 } from "lucide-react";
+import { MoreVertical, Trash2, Edit, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { useEditorStore } from "@/store/editor-store";
 import { useThemeActions } from "@/hooks/use-theme-actions";
@@ -18,8 +18,6 @@ import Link from "next/link";
 interface ThemeCardProps {
   theme: Theme;
   className?: string;
-  onEdit?: (theme: Theme) => void;
-  onShare?: (theme: Theme) => void;
 }
 
 type SwatchDefinition = {
@@ -37,12 +35,7 @@ const swatchDefinitions: SwatchDefinition[] = [
   { name: "Background", bgKey: "background", fgKey: "foreground" },
 ];
 
-export function ThemeCard({
-  theme,
-  className,
-  onEdit,
-  onShare,
-}: ThemeCardProps) {
+export function ThemeCard({ theme, className }: ThemeCardProps) {
   const { themeState } = useEditorStore();
   const { deleteTheme, isDeletingTheme } = useThemeActions();
   const mode = themeState.currentMode;
@@ -62,8 +55,7 @@ export function ThemeCard({
         theme.styles[mode].foreground ||
         "#000000",
     }));
-  }, [theme.styles[mode]]);
-  // --- End of swatch data generation ---
+  }, [mode, theme.styles]);
 
   return (
     <Card
@@ -124,13 +116,13 @@ export function ThemeCard({
                 Open in Editor
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={() => onShare?.(theme)}
               className="gap-2"
             >
               <Share className="h-4 w-4" />
               Share Theme
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuItem
               onClick={handleDelete}
               className="text-destructive gap-2 focus:text-destructive"

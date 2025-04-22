@@ -31,7 +31,11 @@ const ThemeEditActions: React.FC<ThemeEditActionsProps> = ({ theme }) => {
 
   const handleSaveTheme = async (newName: string) => {
     setIsSaving(true);
-    const dataToUpdate: { id: string; name?: string; styles?: any } = {
+    const dataToUpdate: {
+      id: string;
+      name?: string;
+      styles?: Theme["styles"];
+    } = {
       id: theme.id,
     };
 
