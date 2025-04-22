@@ -1,26 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, use } from "react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  EditorConfig,
-  BaseEditorState,
-  ThemeEditorState,
-} from "@/types/editor";
-import { ThemeStyles } from "@/types/theme";
-import { Sliders, Loader2 } from "lucide-react";
+import { EditorConfig } from "@/types/editor";
+import { Theme, ThemeStyles } from "@/types/theme";
+import { Sliders } from "lucide-react";
 import { useEditorStore } from "@/store/editor-store";
-import { getTheme } from "@/actions/themes";
-import { Theme } from "@/types/theme";
 
 interface EditorProps {
   config: EditorConfig;
-  themeId?: string;
+  themePromise: Promise<Theme | null>;
 }
 
 const isThemeStyles = (styles: unknown): styles is ThemeStyles => {
@@ -33,73 +27,32 @@ const isThemeStyles = (styles: unknown): styles is ThemeStyles => {
   );
 };
 
-const Editor: React.FC<EditorProps> = ({ config, themeId }) => {
+const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
   const { themeState, setThemeState } = useEditorStore();
   const Controls = config.controls;
   const Preview = config.preview;
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAndSetTheme = async () => {
-      if (!themeId) return;
-
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await getTheme(themeId);
-        if (result && result.length > 0) {
-          const fetchedTheme = result[0];
-          if (isThemeStyles(fetchedTheme.styles)) {
-            setThemeState({
-              ...themeState,
-              styles: fetchedTheme.styles,
-            });
-          } else {
-            console.error(
-              "Fetched theme styles are invalid:",
-              fetchedTheme.styles
-            );
-            setError("Fetched theme data is invalid.");
-          }
-        } else {
-          setError("Theme not found or access denied.");
-        }
-      } catch (err) {
-        console.error("Error fetching theme:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch theme.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAndSetTheme();
-  }, [themeId, setThemeState]);
+  const initialTheme = themePromise ? use(themePromise) : null;
 
   const handleStyleChange = (newStyles: ThemeStyles) => {
     setThemeState({ ...themeState, styles: newStyles });
   };
 
-  const styles = !isThemeStyles(themeState.styles)
-    ? (config.defaultState as ThemeEditorState).styles
-    : themeState.styles;
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Loading theme...</span>
-      </div>
-    );
-  }
-
-  if (error) {
+  if (initialTheme && !isThemeStyles(initialTheme.styles)) {
     return (
       <div className="flex justify-center items-center h-full text-destructive">
-        Error: {error}
+        Fetched theme data is invalid.
       </div>
     );
   }
+
+  useEffect(() => {
+    if (initialTheme && isThemeStyles(initialTheme.styles)) {
+      handleStyleChange(initialTheme.styles);
+    }
+  }, [initialTheme]);
+
+  const styles = themeState.styles;
 
   return (
     <div className="h-full overflow-hidden">
@@ -112,6 +65,7 @@ const Editor: React.FC<EditorProps> = ({ config, themeId }) => {
                 styles={styles}
                 onChange={handleStyleChange}
                 currentMode={themeState.currentMode}
+                themePromise={themePromise}
               />
             </div>
           </ResizablePanel>
@@ -144,6 +98,7 @@ const Editor: React.FC<EditorProps> = ({ config, themeId }) => {
                 styles={styles}
                 onChange={handleStyleChange}
                 currentMode={themeState.currentMode}
+                themePromise={themePromise}
               />
             </div>
           </TabsContent>
