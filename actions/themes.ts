@@ -29,14 +29,9 @@ const updateThemeSchema = z.object({
   styles: themeStylesSchema.optional(),
 });
 
-// --- Server Actions ---
-
-// Action to get user themes
 export async function getThemes() {
   const userId = await getCurrentUserId();
   if (!userId) {
-    // In actions, throwing errors is common for auth failures
-    // Or return a specific structure like { success: false, error: "Unauthorized" }
     throw new Error("Unauthorized");
   }
   try {
@@ -52,18 +47,13 @@ export async function getThemes() {
 }
 
 export async function getTheme(themeId: string) {
-  const userId = await getCurrentUserId();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
   try {
     const [theme] = await db
       .select()
       .from(themeTable)
-      .where(and(eq(themeTable.id, themeId), eq(themeTable.userId, userId)))
+      .where(eq(themeTable.id, themeId))
       .limit(1);
+
     return theme;
   } catch (error) {
     console.error("Error fetching theme:", error);
