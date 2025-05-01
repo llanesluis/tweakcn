@@ -9,6 +9,7 @@ import cuid from "cuid";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers"; // Keep for session, but actions handle auth differently
 import { themeStylesSchema, type ThemeStyles } from "@/types/theme";
+import { cache } from "react";
 
 // Helper to get user ID (Consider centralizing auth checks)
 async function getCurrentUserId(): Promise<string | null> {
@@ -46,7 +47,8 @@ export async function getThemes() {
   }
 }
 
-export async function getTheme(themeId: string) {
+// Wrap getTheme with React.cache
+export const getTheme = cache(async (themeId: string) => {
   try {
     const [theme] = await db
       .select()
@@ -59,7 +61,7 @@ export async function getTheme(themeId: string) {
     console.error("Error fetching theme:", error);
     throw new Error("Failed to fetch theme.");
   }
-}
+});
 
 // Action to create a new theme
 export async function createTheme(formData: {
