@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import type { Theme } from "@/types/theme";
 import ThemePreviewPanel from "./editor/theme-preview-panel";
 import { Button } from "@/components/ui/button";
-import { Share, Sun, Moon, MoreVertical, Edit } from "lucide-react";
+import { Share, Sun, Moon, MoreVertical, Edit, Copy } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Header } from "./editor/header";
 import { Footer } from "@/components/home/footer";
-
+import { toast } from "@/components/ui/use-toast";
 export default function ThemeView({ theme }: { theme: Theme }) {
   const {
     themeState,
@@ -53,11 +53,19 @@ export default function ThemeView({ theme }: { theme: Theme }) {
     setThemeState({
       ...themeState,
       styles: theme.styles,
+      preset: undefined,
     });
-
+    saveThemeCheckpoint();
     router.push("/editor/theme");
   };
 
+  const handleShare = () => {
+    const url = `https://tweakcn.com/themes/${theme.id}`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Theme URL copied to clipboard!",
+    });
+  };
   return (
     <div className="h-screen flex flex-col">
       <Header />
@@ -90,6 +98,10 @@ export default function ThemeView({ theme }: { theme: Theme }) {
                   >
                     <Edit className="size-4" />
                     Open in Editor
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShare} className="gap-2">
+                    <Copy className="size-4" />
+                    Copy URL
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
