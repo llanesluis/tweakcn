@@ -114,3 +114,8 @@ body {
   /* Apply the reveal animation */
   animation: reveal 0.4s ease-in-out forwards;
 }
+
+/* Mention styles */
+.mention {
+  @apply bg-primary/10 text-primary px-1 rounded-md;
+}

@@ -9,19 +9,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useEditorStore } from "@/store/editor-store";
+import CustomTextarea from "../../custom-textarea";
+import { JSONContent } from "@tiptap/react";
+import { useThemePresetStore } from "@/store/theme-preset-store";
 
 export function AIGenerateButton() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [jsonPrompt, setJsonPrompt] = useState("");
   const { themeState, setThemeState } = useEditorStore();
   const { toast } = useToast();
 
+  const transformPrompt = (prompt: string, jsonPrompt: string) => {
+    const parsedJsonPrompt = JSON.parse(jsonPrompt) as JSONContent;
+    const mentions = parsedJsonPrompt.content?.[0]?.content?.filter(
+      (item) => item.type === "mention"
+    );
+
+    const getMentionContent = (id: string) => {
+      if (id === "editor:current-changes") {
+        return useEditorStore.getState().themeState.styles;
+      }
+
+      return useThemePresetStore.getState().getPreset(id)?.styles;
+    };
+
+    const mentionReferences = mentions?.map(
+      (mention) => `@${mention.attrs?.label} = 
+    ${JSON.stringify(getMentionContent(mention.attrs?.id))}`
+    );
+
+    return prompt + "\n\n" + mentionReferences?.join("\n");
+  };
+
   const handleGenerateTheme = async () => {
     if (!prompt.trim()) return;
+    const transformedPrompt = transformPrompt(prompt, jsonPrompt);
 
     setLoading(true);
     try {
@@ -30,7 +56,7 @@ export function AIGenerateButton() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt: transformedPrompt }),
       });
 
       if (!response.ok) {
@@ -64,6 +90,14 @@ export function AIGenerateButton() {
     }
   };
 
+  const handleContentChange = (
+    textContent: string,
+    jsonContent: JSONContent
+  ) => {
+    setJsonPrompt(JSON.stringify(jsonContent));
+    setPrompt(textContent);
+  };
+
   return (
     <>
       <Button
@@ -85,12 +119,7 @@ export function AIGenerateButton() {
             </DialogDescription>
           </DialogHeader>
 
-          <Textarea
-            placeholder="Describe your theme (e.g. 'A dark cyberpunk theme with neon accents' or 'A clean, minimal light theme with soft pastels')"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="min-h-[120px]"
-          />
+          <CustomTextarea onContentChange={handleContentChange} />
 
           <DialogFooter>
             <Button
