@@ -106,7 +106,9 @@ export function AIGenerateButton() {
             className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/50"
           >
             <Sparkles className="size-3.5" />
-            <span className="text-sm hidden md:block">Generate</span>
+            <span className="text-sm hidden md:block animate-text bg-gradient-to-r from-muted-foreground via-foreground to-muted-foreground bg-[200%_auto] bg-clip-text text-transparent">
+              Generate
+            </span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>Generate theme with AI</TooltipContent>
