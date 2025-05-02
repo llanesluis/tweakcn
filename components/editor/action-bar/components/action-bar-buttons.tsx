@@ -9,6 +9,7 @@ import { useEditorStore } from "@/store/editor-store";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 import { EditButton } from "./edit-button";
 import { MoreOptions } from "./more-options";
+import { AIGenerateButton } from "./ai-generate-button";
 
 interface ActionBarButtonsProps {
   onImportClick: () => void;
@@ -40,6 +41,7 @@ export function ActionBarButtons({
         currentStyles={themeState.styles[themeState.currentMode]}
       />
       <ImportButton onImportClick={onImportClick} />
+      <AIGenerateButton />
       <ResetButton
         onReset={restoreThemeCheckpoint}
         isDisabled={!hasThemeChangedFromCheckpoint()}
