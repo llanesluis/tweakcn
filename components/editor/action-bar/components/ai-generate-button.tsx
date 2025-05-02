@@ -11,6 +11,7 @@ import { useEditorStore } from "@/store/editor-store";
 import { JSONContent } from "@tiptap/react";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 import { AIGenerateDialog } from "@/components/editor/action-bar/components/ai-generate-dialog";
+import { defaultThemeState } from "@/config/theme";
 
 export function AIGenerateButton() {
   const [open, setOpen] = useState(false);
@@ -62,10 +63,13 @@ export function AIGenerateButton() {
 
       const themeStyles = await response.json();
 
-      // Update the theme styles in the store
       setThemeState({
         ...themeState,
-        styles: themeStyles,
+        styles: {
+          ...themeState.styles,
+          light: { ...defaultThemeState.styles.light, ...themeStyles.light },
+          dark: { ...defaultThemeState.styles.dark, ...themeStyles.dark },
+        },
       });
 
       toast({
