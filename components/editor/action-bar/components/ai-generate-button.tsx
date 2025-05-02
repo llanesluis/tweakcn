@@ -2,18 +2,15 @@ import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
 import { useEditorStore } from "@/store/editor-store";
-import CustomTextarea from "../../custom-textarea";
 import { JSONContent } from "@tiptap/react";
 import { useThemePresetStore } from "@/store/theme-preset-store";
+import { AIGenerateDialog } from "@/components/editor/action-bar/components/ai-generate-dialog";
 
 export function AIGenerateButton() {
   const [open, setOpen] = useState(false);
@@ -100,44 +97,29 @@ export function AIGenerateButton() {
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-        className="gap-1"
-      >
-        <Sparkles className="h-4 w-4" />
-        AI Generate
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setOpen(true)}
+            className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/50"
+          >
+            <Sparkles className="size-3.5" />
+            <span className="text-sm hidden md:block">Generate</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Generate theme with AI</TooltipContent>
+      </Tooltip>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Generate AI Theme</DialogTitle>
-            <DialogDescription>
-              Describe your desired theme and our AI will generate it for you.
-            </DialogDescription>
-          </DialogHeader>
-
-          <CustomTextarea onContentChange={handleContentChange} />
-
-          <DialogFooter>
-            <Button
-              onClick={() => setOpen(false)}
-              variant="outline"
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleGenerateTheme}
-              disabled={!prompt.trim() || loading}
-            >
-              {loading ? "Generating..." : "Generate Theme"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AIGenerateDialog
+        open={open}
+        onOpenChange={setOpen}
+        loading={loading}
+        prompt={prompt}
+        onContentChange={handleContentChange}
+        onGenerate={handleGenerateTheme}
+      />
     </>
   );
 }
