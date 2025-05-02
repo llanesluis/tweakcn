@@ -41,7 +41,10 @@ export function AIGenerateDialog({
 
         <div className="px-6 pb-6">
           <div className="bg-muted/40 rounded-lg p-1">
-            <CustomTextarea onContentChange={onContentChange} />
+            <CustomTextarea
+              onContentChange={onContentChange}
+              onGenerate={onGenerate}
+            />
           </div>
 
           <div className="mt-2 text-xs text-muted-foreground">

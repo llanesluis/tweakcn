@@ -1,7 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { themeStylesSchema, themeStylePropsSchema } from "@/types/theme";
+import { themeStylePropsSchema } from "@/types/theme";
 
 const requestSchema = z.object({
   prompt: z.string().min(1),

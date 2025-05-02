@@ -9,9 +9,13 @@ import { suggestion } from "@/components/editor/mention-suggestion"; // We'll cr
 
 interface CustomTextareaProps {
   onContentChange: (textContent: string, jsonContent: JSONContent) => void;
+  onGenerate?: () => void;
 }
 
-const CustomTextarea: React.FC<CustomTextareaProps> = ({ onContentChange }) => {
+const CustomTextarea: React.FC<CustomTextareaProps> = ({
+  onContentChange,
+  onGenerate,
+}) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -33,11 +37,42 @@ const CustomTextarea: React.FC<CustomTextareaProps> = ({ onContentChange }) => {
         class:
           "min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50",
       },
+      handleKeyDown: (view, event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          const { state } = view;
+          // @ts-ignore - Mention.options exists but might not be typed publicly
+          const mentionPluginKey = Mention.options.suggestion.pluginKey;
+
+          // Ensure the plugin key exists before trying to get state
+          if (!mentionPluginKey) {
+            console.error("Mention plugin key not found.");
+            // Fallback: allow default Enter behavior if key is missing
+            return false;
+          }
+
+          const mentionState = mentionPluginKey.getState(state);
+
+          if (mentionState?.active) {
+            // Mention list is active, let the mention extension handle Enter.
+            return false;
+          } else {
+            // Mention list is not active, submit the prompt.
+            event.preventDefault();
+            onGenerate?.();
+            return true;
+          }
+        }
+        return false;
+      },
     },
     onUpdate: ({ editor }) => {
       onContentChange(editor.getText(), editor.getJSON());
     },
   });
+
+  if (!editor) {
+    return null;
+  }
 
   return <EditorContent editor={editor} />;
 };
