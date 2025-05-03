@@ -14,6 +14,7 @@ interface ActionBarButtonsProps {
   onImportClick: () => void;
   onCodeClick: () => void;
   onSaveClick: () => void;
+  onAiGenerateClick: () => void;
   isSaving: boolean;
 }
 
@@ -21,6 +22,7 @@ export function ActionBarButtons({
   onImportClick,
   onCodeClick,
   onSaveClick,
+  onAiGenerateClick,
   isSaving,
 }: ActionBarButtonsProps) {
   const { themeState, restoreThemeCheckpoint, hasThemeChangedFromCheckpoint } =
@@ -41,7 +43,7 @@ export function ActionBarButtons({
         isDisabled={!hasThemeChangedFromCheckpoint()}
       />
       <ImportButton onImportClick={onImportClick} />
-      <AIGenerateButton />
+      <AIGenerateButton onClick={onAiGenerateClick} />
       <Separator orientation="vertical" className="h-8 mx-1" />
       {showEditButton && <EditButton themeId={themeState.preset as string} />}
       <SaveButton onSaveClick={onSaveClick} isSaving={isSaving} />

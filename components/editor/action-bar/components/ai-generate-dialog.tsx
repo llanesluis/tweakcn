@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,19 +16,30 @@ interface AIGenerateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   loading: boolean;
-  prompt: string;
-  onContentChange: (textContent: string, jsonContent: JSONContent) => void;
-  onGenerate: () => void;
+  onGenerate: (textPrompt: string, jsonPrompt: string) => void;
 }
 
 export function AIGenerateDialog({
   open,
   onOpenChange,
   loading,
-  prompt,
-  onContentChange,
   onGenerate,
 }: AIGenerateDialogProps) {
+  const [prompt, setPrompt] = useState("");
+  const [jsonPrompt, setJsonPrompt] = useState("");
+
+  const handleContentChange = (
+    textContent: string,
+    jsonContent: JSONContent
+  ) => {
+    setJsonPrompt(JSON.stringify(jsonContent));
+    setPrompt(textContent);
+  };
+
+  const handleGenerate = () => {
+    onGenerate(prompt, jsonPrompt);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden rounded-lg border shadow-lg">
@@ -40,8 +52,8 @@ export function AIGenerateDialog({
         <div className="px-6 pb-6">
           <div className="bg-muted/40 rounded-lg p-1">
             <CustomTextarea
-              onContentChange={onContentChange}
-              onGenerate={onGenerate}
+              onContentChange={handleContentChange}
+              onGenerate={handleGenerate}
             />
           </div>
 
@@ -68,7 +80,7 @@ export function AIGenerateDialog({
               Cancel
             </Button>
             <Button
-              onClick={onGenerate}
+              onClick={handleGenerate}
               disabled={!prompt.trim() || loading}
               className="gap-1"
               size="sm"
