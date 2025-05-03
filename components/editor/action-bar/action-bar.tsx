@@ -38,6 +38,10 @@ export function ActionBar() {
     setSaveDialogOpen(true);
   });
 
+  usePostLoginAction("AI_GENERATE", () => {
+    setAiGenerateOpen(true);
+  });
+
   const handleGenerateTheme = async (
     promptText: string,
     jsonPromptText: string
@@ -47,6 +51,11 @@ export function ActionBar() {
   };
 
   const handleAiGenerateClick = () => {
+    if (!session) {
+      openAuthDialog("signin", "AI_GENERATE");
+      return;
+    }
+
     setAiGenerateOpen(true);
   };
 
