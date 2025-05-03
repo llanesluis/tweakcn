@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,8 +9,12 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { Sparkles, Loader2 } from "lucide-react";
-import CustomTextarea from "../../custom-textarea";
 import type { JSONContent } from "@tiptap/react";
+import { Loading } from "@/components/loading";
+
+const CustomTextarea = lazy(
+  () => import("@/components/editor/custom-textarea")
+);
 
 interface AIGenerateDialogProps {
   open: boolean;
@@ -51,10 +55,12 @@ export function AIGenerateDialog({
 
         <div className="px-6 pb-6">
           <div className="bg-muted/40 rounded-lg p-1">
-            <CustomTextarea
-              onContentChange={handleContentChange}
-              onGenerate={handleGenerate}
-            />
+            <Suspense fallback={<Loading className="min-h-[80px]" />}>
+              <CustomTextarea
+                onContentChange={handleContentChange}
+                onGenerate={handleGenerate}
+              />
+            </Suspense>
           </div>
 
           <div className="mt-2 text-xs text-muted-foreground">
