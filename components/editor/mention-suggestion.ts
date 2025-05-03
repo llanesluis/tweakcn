@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { ReactRenderer } from "@tiptap/react";
 import tippy from "tippy.js";
 import { MentionList } from "@/components/editor/mention-list"; // We'll create this component next
@@ -70,7 +72,7 @@ export const suggestion = {
           return true;
         }
 
-        // @ts-ignore - This is a valid way to access the component's methods
+        // @ts-expect-error - This is a valid way to access the component's methods
         return component?.ref?.onKeyDown(props);
       },
 

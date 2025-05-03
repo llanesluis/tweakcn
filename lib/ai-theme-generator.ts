@@ -2,9 +2,9 @@ import { useEditorStore } from "@/store/editor-store";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 import { defaultThemeState } from "@/config/theme";
 import { JSONContent } from "@tiptap/react";
-
+import { Theme } from "@/types/theme";
 interface GenerateThemeOptions {
-  onSuccess?: (themeStyles: any) => void;
+  onSuccess?: (themeStyles: Theme["styles"]) => void;
   onError?: (error: Error) => void;
 }
 
@@ -66,7 +66,7 @@ export async function generateThemeWithReferences(
 /**
  * Apply a generated theme to the editor state
  */
-export function applyGeneratedTheme(themeStyles: any) {
+export function applyGeneratedTheme(themeStyles: Theme["styles"]) {
   const { themeState, setThemeState } = useEditorStore.getState();
 
   if (!document.startViewTransition) {

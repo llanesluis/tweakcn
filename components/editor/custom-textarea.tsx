@@ -40,7 +40,6 @@ const CustomTextarea: React.FC<CustomTextareaProps> = ({
       handleKeyDown: (view, event) => {
         if (event.key === "Enter" && !event.shiftKey) {
           const { state } = view;
-          // @ts-ignore - Mention.options exists but might not be typed publicly
           const mentionPluginKey = Mention.options.suggestion.pluginKey;
 
           // Ensure the plugin key exists before trying to get state
