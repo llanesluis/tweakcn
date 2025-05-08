@@ -5,10 +5,9 @@ import { SliderWithInput } from "./slider-with-input";
 import { useEditorStore } from "../../store/editor-store";
 import { COMMON_STYLES, defaultThemeState } from "../../config/theme";
 import { ThemeEditorState } from "@/types/editor";
-import { converter, Hsl } from "culori";
+import { converter, formatHex, Hsl } from "culori";
 import { debounce } from "@/utils/debounce";
 import { isDeepEqual } from "@/lib/utils";
-import { formatHsl } from "@/utils/color-converter";
 
 // Adjusts a color by modifying HSL values
 function adjustColorByHsl(
@@ -32,7 +31,8 @@ function adjustColorByHsl(
     l: Math.min(1, Math.max(0.1, l * lightnessScale)),
   };
 
-  return formatHsl(adjustedHsl as Hsl);
+  const out = converter("hsl")(adjustedHsl as Hsl);
+  return formatHex(out);
 }
 
 const HslAdjustmentControls = () => {
