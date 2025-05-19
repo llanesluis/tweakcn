@@ -6,6 +6,7 @@ export function useAIThemeGeneration() {
   const _generateTheme = useAIThemeGenerationStore((state) => state.generateTheme);
   const loading = useAIThemeGenerationStore((state) => state.loading);
   const cancelThemeGeneration = useAIThemeGenerationStore((state) => state.cancelThemeGeneration);
+  const resetState = useAIThemeGenerationStore((state) => state.resetState);
 
   const generateTheme = async (options?: GenerateThemeOptions) => {
     return await _generateTheme({
@@ -40,6 +41,7 @@ export function useAIThemeGeneration() {
     generateTheme,
     loading,
     cancelThemeGeneration,
+    resetState,
   };
 }
 

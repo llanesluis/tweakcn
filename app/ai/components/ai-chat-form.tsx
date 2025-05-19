@@ -14,6 +14,8 @@ import dynamic from "next/dynamic";
 import { usePreviewPanel } from "../hooks/use-preview-panel";
 import { LoadingLogo } from "./loading-logo";
 import ThemePresetSelect from "./temp-theme-preset-select";
+import { useChatLocal } from "../hooks/use-chat-local";
+import { ThemeStyles } from "@/types/theme";
 
 const CustomTextarea = dynamic(() => import("@/components/editor/custom-textarea"), {
   ssr: false,
@@ -30,6 +32,7 @@ export function AIChatForm() {
 
   const { data: session } = authClient.useSession();
   const { openAuthDialog } = useAuthStore();
+  const { addUserMessage, addAssistantMessage } = useChatLocal();
 
   const { setIsPreviewPanelOpen } = usePreviewPanel();
   const handleSuccessfulThemeGeneration = () => {
@@ -37,7 +40,7 @@ export function AIChatForm() {
     // TODO: reset prompts
   };
 
-  usePostLoginAction("AI_GENERATE_FROM_CHAT", ({ prompt, jsonPrompt }) => {
+  usePostLoginAction("AI_GENERATE_FROM_CHAT", async ({ prompt, jsonPrompt }) => {
     if (!prompt || !jsonPrompt) {
       toast({
         title: "Error",
@@ -46,10 +49,17 @@ export function AIChatForm() {
       return;
     }
 
-    generateTheme({
+    const theme: ThemeStyles = await generateTheme({
       prompt,
       jsonPrompt,
       onSuccess: handleSuccessfulThemeGeneration,
+    });
+
+    // Add assistant message to chat history
+    addAssistantMessage({
+      content: prompt,
+      jsonContent: jsonPrompt,
+      themeStyles: theme,
     });
   });
 
@@ -64,12 +74,29 @@ export function AIChatForm() {
       return;
     }
 
-    await generateTheme({ prompt, jsonPrompt, onSuccess: handleSuccessfulThemeGeneration });
+    // TODO: Improve implementation
+    addUserMessage({
+      prompt,
+      jsonPrompt: JSON.parse(jsonPrompt),
+    });
+
+    const theme = await generateTheme({
+      prompt,
+      jsonPrompt,
+      onSuccess: handleSuccessfulThemeGeneration,
+    });
+
+    // TODO: Improve implementation
+    addAssistantMessage({
+      content: prompt,
+      jsonContent: JSON.parse(jsonPrompt),
+      themeStyles: theme,
+    });
   };
 
   return (
-    <div className="bg-background @container/form rounded-xl border shadow transition-all">
-      <div className="bg-background relative z-10 flex size-full min-h-[100px] flex-1 flex-col overflow-hidden rounded-xl">
+    <div className="@container/form relative transition-all">
+      <div className="dark:border-border/75! bg-background relative z-10 flex size-full min-h-[100px] flex-1 flex-col overflow-hidden rounded-lg border shadow-xs">
         <label className="sr-only">Chat Input</label>
         <div className={cn("min-h-[80px] p-2 pb-0", aiGenerateLoading && "pointer-events-none")}>
           <div className="relative isolate" aria-disabled={aiGenerateLoading}>

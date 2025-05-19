@@ -3,75 +3,24 @@
 import { useTheme } from "@/components/theme-provider";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAIThemeGeneration } from "@/hooks/use-ai-theme-generation";
 import { DialogActionsProvider, useDialogActions } from "@/hooks/use-dialog-actions";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/store/editor-store";
-import { ChevronDown, ChevronUp, Code, Edit, Heart, Moon, RefreshCw, Sun } from "lucide-react";
+import { Code, Edit, Heart, Moon, Plus, Redo, RefreshCw, Sun, Undo } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useChatLocal } from "../hooks/use-chat-local";
 import { usePreviewPanel } from "../hooks/use-preview-panel";
+import { HorizontalScrollArea } from "./horizontal-scroll-area";
 import { TogglePreviewPanelButton } from "./toggle-preview-panel-button";
 
 export function Toolbar() {
-  const [isToolbarOpen, setIsToolbarOpen] = useState(true);
-
   return (
     <DialogActionsProvider>
-      {/* Mobile Toolbar */}
-      <div className="bg-background z-10 overflow-hidden border-b transition-all duration-200 md:hidden">
-        <ScrollArea className="isolate mx-auto flex w-full justify-center overflow-x-auto">
-          <div className="isolate mx-auto flex w-full justify-center px-4 py-2">
-            <ToolbarActions />
-          </div>
-          <ScrollBar orientation="horizontal" className="h-2" />
-        </ScrollArea>
-      </div>
-
-      {/* Desktop Toolbar */}
-      <div
-        className={cn(
-          "group/toolbar fixed inset-x-0 bottom-6 isolate z-50 mx-auto hidden w-fit transition-all duration-200 md:flex",
-          isToolbarOpen ? "translate-y-0" : "bottom-0 translate-y-full"
-        )}
-      >
-        <div
-          className={cn(
-            "animate-in fade-in absolute inset-0 z-[-1] blur-sm transition-all duration-1000",
-            isToolbarOpen ? "bg-foreground/10" : "bg-transparent"
-          )}
-        />
-        <button
-          onClick={() => setIsToolbarOpen(!isToolbarOpen)}
-          className={cn(
-            "group/chevron absolute inset-x-0 top-0 z-[-1] mx-auto size-8 translate-y-0 rounded-lg p-1.5 opacity-0 transition-all duration-200",
-            isToolbarOpen
-              ? "group-hover/toolbar:-translate-y-full group-hover/toolbar:opacity-100"
-              : "-translate-y-full opacity-100"
-          )}
-        >
-          <div
-            className={cn(
-              "bg-background ring-border relative mx-auto flex size-5 items-center justify-center rounded-full p-1 ring",
-              !isToolbarOpen && ""
-            )}
-          >
-            {!isToolbarOpen && (
-              <div className="bg-primary/50 absolute inset-0.5 z-[-1] animate-ping rounded-full" />
-            )}
-            {isToolbarOpen ? (
-              <ChevronDown className="text-muted-foreground group-hover/chevron:text-foreground size-5 transition-all duration-200 group-hover/chevron:scale-115" />
-            ) : (
-              <ChevronUp className="text-muted-foreground group-hover/chevron:text-foreground size-5 stroke-2 transition-all duration-200 group-hover/chevron:scale-115" />
-            )}
-          </div>
-        </button>
-
-        <div className="bg-background ring-border/30 rounded-lg border p-2 shadow ring">
+      <div className="h-14 content-center overflow-hidden border-b">
+        <HorizontalScrollArea className="isolate mx-auto flex h-full w-full justify-center px-4 py-2">
           <ToolbarActions />
-        </div>
+        </HorizontalScrollArea>
       </div>
     </DialogActionsProvider>
   );
@@ -84,15 +33,21 @@ function ToolbarActions() {
     saveThemeCheckpoint,
     restoreThemeCheckpoint,
     hasThemeChangedFromCheckpoint,
+    redo,
+    undo,
+    canRedo,
+    canUndo,
   } = useEditorStore();
 
   const isMobile = useIsMobile();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const { loading: aiGenerateLoading } = useAIThemeGeneration();
-  const { isPreviewPanelOpen } = usePreviewPanel();
+  const { isPreviewPanelOpen, setIsPreviewPanelOpen } = usePreviewPanel();
+  const { resetState } = useAIThemeGeneration();
 
   const { handleSaveClick, setCodePanelOpen } = useDialogActions();
+  const { clearMessages } = useChatLocal();
 
   const handleOpenInEditor = () => {
     // Check this implementation once the AI flow works
@@ -119,8 +74,39 @@ function ToolbarActions() {
     handleSaveClick({ shareAfterSave: true });
   };
 
+  const handleOpenNewChat = () => {
+    clearMessages();
+    resetState();
+  };
+
   return (
     <div className="flex items-center gap-1.5">
+      {/* New chat button */}
+      <TooltipWrapper label="New chat">
+        <Button
+          size="icon"
+          className="border shadow-none"
+          onClick={handleOpenNewChat}
+          disabled={aiGenerateLoading}
+        >
+          <Plus />
+        </Button>
+      </TooltipWrapper>
+
+      {/* Open in Editor Button */}
+      <TooltipWrapper label="Customize further in Editor">
+        <Button
+          size={isMobile ? "icon" : "default"}
+          variant="secondary"
+          className="border shadow-none"
+          onClick={handleOpenInEditor}
+          disabled={aiGenerateLoading}
+        >
+          <Edit />
+          <span className="hidden md:block">Open in Editor</span>
+        </Button>
+      </TooltipWrapper>
+
       {/* Theme Toggle Button */}
       <TooltipWrapper label="Toggle theme">
         <Button
@@ -130,7 +116,33 @@ function ToolbarActions() {
           disabled={aiGenerateLoading}
           onClick={handleThemeToggle}
         >
-          {theme === "light" ? <Moon className="size-3" /> : <Sun className="size-3" />}
+          {theme === "light" ? <Moon /> : <Sun />}
+        </Button>
+      </TooltipWrapper>
+
+      {/* Undo Button */}
+      <TooltipWrapper label="Undo">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="bg-background border"
+          onClick={undo}
+          disabled={!canUndo() || aiGenerateLoading}
+        >
+          <Undo />
+        </Button>
+      </TooltipWrapper>
+
+      {/* Redo Button */}
+      <TooltipWrapper label="Redo">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="bg-background border"
+          onClick={redo}
+          disabled={!canRedo() || aiGenerateLoading}
+        >
+          <Redo />
         </Button>
       </TooltipWrapper>
 
@@ -143,7 +155,7 @@ function ToolbarActions() {
           onClick={restoreThemeCheckpoint}
           disabled={!hasThemeChangedFromCheckpoint() || aiGenerateLoading}
         >
-          <RefreshCw className="size-3" /> <span className="hidden md:block">Reset</span>
+          <RefreshCw /> <span className="hidden md:block">Reset</span>
         </Button>
       </TooltipWrapper>
 
@@ -156,7 +168,7 @@ function ToolbarActions() {
           onClick={handleOpenSaveDialog}
           disabled={aiGenerateLoading}
         >
-          <Heart className="size-3" /> <span className="hidden md:block">Save</span>
+          <Heart /> <span className="hidden md:block">Save</span>
         </Button>
       </TooltipWrapper>
 
@@ -169,19 +181,7 @@ function ToolbarActions() {
           onClick={handleOpenCodePanel}
           disabled={aiGenerateLoading}
         >
-          <Code className="size-3" /> <span className="hidden md:block">Code</span>
-        </Button>
-      </TooltipWrapper>
-
-      {/* Open in Editor Button */}
-      <TooltipWrapper label="Customize further in Editor">
-        <Button
-          variant="secondary"
-          className="border shadow-none"
-          onClick={handleOpenInEditor}
-          disabled={aiGenerateLoading}
-        >
-          <Edit className="size-3" /> Open in Editor
+          <Code /> <span className="hidden md:block">Code</span>
         </Button>
       </TooltipWrapper>
 

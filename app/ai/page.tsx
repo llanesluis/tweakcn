@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { AIInterface } from "./components/ai-interface";
 import { Toolbar } from "./components/toolbar";
 import { PreviewPanelProvider } from "./hooks/use-preview-panel";
+import { ChatLocalProvider } from "./hooks/use-chat-local";
 
 export const metadata: Metadata = {
   title: "AI Theme Editor for shadcn/ui — tweakcn",
@@ -16,11 +17,13 @@ export const metadata: Metadata = {
 export default function AiPage() {
   return (
     <PreviewPanelProvider>
-      <Toolbar />
-      <AuthDialogWrapper />
-      <div className="relative isolate flex flex-1 items-center justify-center overflow-hidden">
-        <AIInterface />
-      </div>
+      <ChatLocalProvider>
+        <Toolbar />
+        <AuthDialogWrapper />
+        <div className="relative isolate flex flex-1 flex-col overflow-hidden">
+          <AIInterface />
+        </div>
+      </ChatLocalProvider>
     </PreviewPanelProvider>
   );
 }
