@@ -19,7 +19,11 @@ import { ThemeStyles } from "@/types/theme";
 
 const CustomTextarea = dynamic(() => import("@/components/editor/custom-textarea"), {
   ssr: false,
-  loading: () => <Loading className="min-h-[80px] w-full rounded-lg" />,
+  loading: () => (
+    <div className="bg-muted/50 flex h-[60px] w-full animate-pulse flex-col items-center justify-center overflow-hidden rounded-lg">
+      <Loading className="w-full" />
+    </div>
+  ),
 });
 
 export function AIChatForm() {
@@ -96,9 +100,9 @@ export function AIChatForm() {
 
   return (
     <div className="@container/form relative transition-all">
-      <div className="dark:border-border/75! bg-background relative z-10 flex size-full min-h-[100px] flex-1 flex-col overflow-hidden rounded-lg border shadow-xs">
+      <div className="bg-background relative z-10 flex size-full min-h-[100px] flex-1 flex-col overflow-hidden rounded-lg border shadow-xs">
         <label className="sr-only">Chat Input</label>
-        <div className={cn("min-h-[80px] p-2 pb-0", aiGenerateLoading && "pointer-events-none")}>
+        <div className={cn("min-h-[60px] p-2 pb-0", aiGenerateLoading && "pointer-events-none")}>
           <div className="relative isolate" aria-disabled={aiGenerateLoading}>
             <AIChatFormGeneratingFallback aiGenerateLoading={aiGenerateLoading} />
             <CustomTextarea onContentChange={handleContentChange} onGenerate={handleGenerate} />

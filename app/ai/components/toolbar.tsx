@@ -43,7 +43,7 @@ function ToolbarActions() {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const { loading: aiGenerateLoading } = useAIThemeGeneration();
-  const { isPreviewPanelOpen, setIsPreviewPanelOpen } = usePreviewPanel();
+  const { isPreviewPanelOpen } = usePreviewPanel();
   const { resetState } = useAIThemeGeneration();
 
   const { handleSaveClick, setCodePanelOpen } = useDialogActions();

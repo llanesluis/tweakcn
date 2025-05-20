@@ -108,8 +108,9 @@ export function AIInterface() {
           </section>
         </ResizablePanel>
 
-        {/* {isMobile && isPreviewPanelOpen &&} */}
-        <ResizableHandle className="after:hover:bg-muted z-1" />
+        {!isMobile && isPreviewPanelOpen && (
+          <ResizableHandle className="after:hover:bg-muted z-1" />
+        )}
 
         {!isMobile && (
           <ResizablePanel
