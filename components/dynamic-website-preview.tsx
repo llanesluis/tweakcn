@@ -44,7 +44,7 @@ import React from "react";
  */
 
 const SCRIPT_URL = "https://tweakcn.com/live-preview-embed-script.js";
-const TWEAKCN_EMBED_SCRIPT_TAG = `<script src="${SCRIPT_URL}"></script>`;
+const TWEAKCN_EMBED_SCRIPT_TAG = `<script src="${SCRIPT_URL}"/>`;
 
 export function DynamicWebsitePreview({
   className,
