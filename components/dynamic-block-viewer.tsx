@@ -9,10 +9,9 @@ import { LoadingLogo } from "@/components/editor/ai/loading-logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { IframeStatus, useIframeThemeInjector } from "@/hooks/use-iframe-theme-injector";
+import { useIframeThemeInjector } from "@/hooks/use-iframe-theme-injector";
 import { cn } from "@/lib/utils";
-import { useEditorStore } from "@/store/editor-store";
-import { applyThemeToElement } from "@/utils/apply-theme";
+import { IframeStatus } from "@/types/live-preview-embed";
 import {
   AlertCircle,
   CheckCircle,
@@ -26,21 +25,36 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
-const DYNAMIC_IFRAME_ID = "dynamic-block-iframe";
+/**
+ * Dynamic Block Viewer - Load and theme external websites
+ *
+ * Usage Examples:
+ *
+ * // Same-origin mode (default) - direct DOM theme injection
+ * <DynamicBlockViewer name="Local Preview" />
+ *
+ * // Cross-origin mode - requires external sites to include embed script
+ * <DynamicBlockViewer name="External Preview" allowCrossOrigin={true} />
+ *
+ * The allowCrossOrigin flag must be explicitly set to true to enable
+ * external website theming via the embed script.
+ */
+
 const SCRIPT_URL = "https://tweakcn.com/live-preview-embed-script.js";
+const TWEAKCN_EMBED_SCRIPT_TAG = `<script src="${SCRIPT_URL}"></script>`;
 
 export function DynamicBlockViewer({
   className,
   name,
-  useDirectInjection = false,
+  allowCrossOrigin = false,
   ...props
 }: React.ComponentPropsWithoutRef<"div"> & {
   name: string;
   dynamic?: boolean;
-  useDirectInjection?: boolean;
+  allowCrossOrigin?: boolean;
 }) {
   return (
-    <DynamicBlockViewerProvider useDirectInjection={useDirectInjection}>
+    <DynamicBlockViewerProvider allowCrossOrigin={allowCrossOrigin}>
       <div
         className={cn(
           "group/block-view-wrapper bg-background @container isolate flex size-full min-w-0 flex-col overflow-clip",
@@ -66,9 +80,10 @@ type DynamicBlockViewerContext = {
   setIsLoading: (loading: boolean) => void;
   error: string | null;
   setError: (error: string | null) => void;
-  useDirectInjection: boolean;
   status: IframeStatus;
   retryValidation: () => void;
+  allowCrossOrigin: boolean;
+  iframeRef: React.RefObject<HTMLIFrameElement | null>; // Ref for the iframe element
 };
 
 const DynamicBlockViewerContext = React.createContext<DynamicBlockViewerContext | null>(null);
@@ -83,19 +98,24 @@ function useDynamicBlockViewer() {
 
 function DynamicBlockViewerProvider({
   children,
-  useDirectInjection = false,
+  allowCrossOrigin = false,
 }: {
   children: React.ReactNode;
-  useDirectInjection?: boolean;
+  allowCrossOrigin?: boolean;
 }) {
   const [inputUrl, setInputUrl] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { status, retryValidation } = useIframeThemeInjector(
-    DYNAMIC_IFRAME_ID,
-    !useDirectInjection && !!currentUrl
-  );
+
+  // The hook provides the iframe ref and status
+  const {
+    ref: iframeRef,
+    status,
+    retryValidation,
+  } = useIframeThemeInjector({
+    allowCrossOrigin: allowCrossOrigin && !!currentUrl,
+  });
 
   return (
     <BlockViewerProvider>
@@ -109,9 +129,10 @@ function DynamicBlockViewerProvider({
           setIsLoading,
           error,
           setError,
-          useDirectInjection: useDirectInjection,
           status,
           retryValidation,
+          allowCrossOrigin,
+          iframeRef,
         }}
       >
         {children}
@@ -129,7 +150,8 @@ function DynamicToolbarControls() {
     isLoading,
     setIsLoading,
     setError,
-    useDirectInjection,
+    allowCrossOrigin,
+    iframeRef,
   } = useDynamicBlockViewer();
 
   const loadUrl = () => {
@@ -144,27 +166,47 @@ function DynamicToolbarControls() {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    setCurrentUrl(formattedUrl);
+    // Always set loading state and clear errors
     setIsLoading(true);
     setError(null);
+
+    // Update current URL state
+    setCurrentUrl(formattedUrl);
+
+    // Force iframe to reload even if URL is the same
+    if (iframeRef.current) {
+      try {
+        // Add cache busting parameter to force reload
+        const url = new URL(formattedUrl);
+        url.searchParams.set("_t", Date.now().toString());
+        iframeRef.current.src = url.toString();
+      } catch {
+        // Fallback: just set the URL directly if URL constructor fails
+        iframeRef.current.src = formattedUrl + `?_t=${Date.now()}`;
+      }
+    }
   };
 
   const refreshIframe = () => {
-    if (currentUrl) {
-      setIsLoading(true);
-      setError(null);
-      // Force iframe refresh by changing src
-      const iframe = document.getElementById(DYNAMIC_IFRAME_ID) as HTMLIFrameElement;
-      if (iframe) {
-        iframe.src = currentUrl;
+    if (!currentUrl) return;
+    setIsLoading(true);
+    setError(null);
+    // Force iframe refresh with cache busting
+    if (iframeRef.current) {
+      try {
+        const url = new URL(currentUrl);
+        url.searchParams.set("_refresh", Date.now().toString());
+        iframeRef.current.src = url.toString();
+      } catch {
+        // Fallback: just append query parameter
+        iframeRef.current.src = currentUrl + `?_refresh=${Date.now()}`;
       }
     }
   };
 
   const openInNewTab = () => {
-    if (currentUrl) {
-      window.open(currentUrl, "_blank", "noopener,noreferrer");
-    }
+    if (!currentUrl) return;
+    window.open(currentUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -173,8 +215,8 @@ function DynamicToolbarControls() {
         <Input
           type="url"
           placeholder={
-            useDirectInjection
-              ? "Enter same-origin URL for theme injection"
+            !allowCrossOrigin
+              ? "Enter same-origin URL for direct theme injection"
               : "Enter website URL (e.g., tweakcn.com)"
           }
           value={inputUrl}
@@ -223,6 +265,10 @@ function DynamicToolbarControls() {
   );
 }
 
+/**
+ * Content component that manages the iframe and its loading states
+ * Theme injection is now handled entirely by the useIframeThemeInjector hook
+ */
 function DynamicIframeContent() {
   const {
     currentUrl,
@@ -230,15 +276,12 @@ function DynamicIframeContent() {
     setIsLoading,
     error,
     setError,
-    useDirectInjection,
     status,
     retryValidation,
+    allowCrossOrigin,
+    iframeRef,
   } = useDynamicBlockViewer();
-  const { themeState } = useEditorStore();
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
-
-  useIframeThemeInjector(DYNAMIC_IFRAME_ID, !useDirectInjection && isIframeLoaded);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearLoadingTimeout = () => {
     if (loadingTimeoutRef.current) {
@@ -251,30 +294,7 @@ function DynamicIframeContent() {
     clearLoadingTimeout();
     setIsLoading(false);
     setError(null);
-    setIsIframeLoaded(true);
-
-    // Inject theme if allowed and same-origin
-    if (useDirectInjection && currentUrl) {
-      try {
-        const iframe = document.getElementById(DYNAMIC_IFRAME_ID) as HTMLIFrameElement;
-        if (iframe && iframe.contentDocument) {
-          // Only works for same-origin content
-          const iframeRoot = iframe.contentDocument.documentElement;
-          if (iframeRoot) {
-            applyThemeToElement(themeState, iframeRoot);
-          }
-        }
-      } catch (e) {
-        console.warn("Cannot inject theme into cross-origin iframe:", e);
-      }
-    }
   };
-
-  useEffect(() => {
-    if (currentUrl) {
-      setIsIframeLoaded(false);
-    }
-  }, [currentUrl]);
 
   // Set up timeout when loading starts
   useEffect(() => {
@@ -291,23 +311,6 @@ function DynamicIframeContent() {
     }
   }, [isLoading, currentUrl, setIsLoading, setError]);
 
-  // Watch for theme changes and re-inject if possible
-  useEffect(() => {
-    if (useDirectInjection && currentUrl && !isLoading) {
-      try {
-        const iframe = document.getElementById(DYNAMIC_IFRAME_ID) as HTMLIFrameElement;
-        if (iframe && iframe.contentDocument) {
-          const iframeRoot = iframe.contentDocument.documentElement;
-          if (iframeRoot) {
-            applyThemeToElement(themeState, iframeRoot);
-          }
-        }
-      } catch (e) {
-        console.error("Cannot inject theme into cross-origin iframe:", e);
-      }
-    }
-  }, [themeState, useDirectInjection, currentUrl, isLoading]);
-
   const handleIframeError = () => {
     clearLoadingTimeout();
     setIsLoading(false);
@@ -315,8 +318,6 @@ function DynamicIframeContent() {
       "Failed to load website. This could be due to CORS restrictions or the site blocking iframes."
     );
   };
-
-  const scriptTag = `<script src="${SCRIPT_URL}"></script>`;
 
   if (!currentUrl && !error) {
     return (
@@ -336,8 +337,10 @@ function DynamicIframeContent() {
             <p className="text-foreground text-lg font-medium">Preview External Websites</p>
             <p className="text-muted-foreground text-sm text-pretty">
               Enter a URL to preview websites built with{" "}
-              <span className="font-medium">shadcn/ui</span> components. External sites using
-              shadcn/ui can integrate with tweakcn by including our script for live theme previews.
+              <span className="font-medium">shadcn/ui</span> components.
+              {allowCrossOrigin
+                ? "External sites can integrate with tweakcn by including our script for live theme previews."
+                : "Same-origin websites support direct theme injection without requiring external scripts."}
             </p>
           </div>
 
@@ -347,10 +350,10 @@ function DynamicIframeContent() {
                 <span className="font-medium">For external website integration:</span>
               </p>
 
-              <CopyButton textToCopy={scriptTag} className="[&>svg]:size-3" />
+              <CopyButton textToCopy={TWEAKCN_EMBED_SCRIPT_TAG} className="[&>svg]:size-3" />
             </div>
             <code className="text-foreground bg-muted block rounded-md border p-2 font-mono text-xs">
-              {scriptTag}
+              {TWEAKCN_EMBED_SCRIPT_TAG}
             </code>
           </Card>
         </div>
@@ -389,17 +392,21 @@ function DynamicIframeContent() {
       )}
 
       <iframe
-        id={DYNAMIC_IFRAME_ID}
+        ref={iframeRef}
         src={currentUrl}
         title="Dynamic Website Preview"
         className="size-full"
         onLoad={handleIframeLoad}
         onError={handleIframeError}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        sandbox={
+          allowCrossOrigin
+            ? "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            : "allow-scripts allow-same-origin"
+        }
         loading="lazy"
       />
 
-      {!isLoading && !!status && (
+      {!isLoading && !!status && allowCrossOrigin && (
         <div className="bg-background/60 outline-border/50 absolute bottom-2 left-2 z-10 rounded-md px-2 py-1 outline-2 backdrop-blur-lg">
           <ConnectionStatus
             status={status}
@@ -423,24 +430,6 @@ function ConnectionStatus({
 }) {
   if (isLoading || status === "unknown") return null;
 
-  const ICONS: Record<IframeStatus, React.ReactNode> = {
-    checking: <Loader className="text-foreground size-4 animate-spin" />,
-    connected: <CheckCircle className="text-foreground size-4" />,
-    supported: <CheckCircle className="text-foreground size-4" />,
-    unsupported: <AlertCircle className="text-foreground size-4" />,
-    missing: <XCircle className="text-destructive size-4" />,
-    unknown: null,
-  };
-
-  const TEXTS: Record<IframeStatus, string> = {
-    checking: "Checking connection...",
-    connected: "Connected",
-    supported: "Live preview enabled",
-    unsupported: "Unsupported site",
-    missing: "Script not found",
-    unknown: "",
-  };
-
   return (
     <div className="flex h-8 items-center gap-2">
       {ICONS[status]}
@@ -458,3 +447,21 @@ function ConnectionStatus({
     </div>
   );
 }
+
+const ICONS: Record<IframeStatus, React.ReactNode> = {
+  checking: <Loader className="text-foreground size-4 animate-spin" />,
+  connected: <CheckCircle className="text-foreground size-4" />,
+  supported: <CheckCircle className="text-foreground size-4" />,
+  unsupported: <AlertCircle className="text-foreground size-4" />,
+  missing: <XCircle className="text-destructive size-4" />,
+  unknown: null,
+};
+
+const TEXTS: Record<IframeStatus, string> = {
+  checking: "Checking connection...",
+  connected: "Connected",
+  supported: "Live preview enabled",
+  unsupported: "Unsupported site",
+  missing: "Script not found",
+  unknown: "",
+};
