@@ -1,3 +1,5 @@
+"use client";
+
 import Logo from "@/assets/logo.svg";
 import {
   BlockViewerDisplay,
@@ -10,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useIframeThemeInjector } from "@/hooks/use-iframe-theme-injector";
+import { useWebsitePreview } from "@/hooks/use-website-preview";
 import { cn } from "@/lib/utils";
 import { IframeStatus } from "@/types/live-preview-embed";
 import {
@@ -23,18 +26,18 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 
 /**
- * Dynamic Block Viewer - Load and theme external websites
+ * Dynamic Website Preview - Load and theme external websites
  *
  * Usage Examples:
  *
  * // Same-origin mode (default) - direct DOM theme injection
- * <DynamicBlockViewer name="Local Preview" />
+ * <DynamicWebsitePreview name="Local Preview" />
  *
  * // Cross-origin mode - requires external sites to include embed script
- * <DynamicBlockViewer name="External Preview" allowCrossOrigin={true} />
+ * <DynamicWebsitePreview name="External Preview" allowCrossOrigin />
  *
  * The allowCrossOrigin flag must be explicitly set to true to enable
  * external website theming via the embed script.
@@ -43,101 +46,76 @@ import React, { useEffect, useRef, useState } from "react";
 const SCRIPT_URL = "https://tweakcn.com/live-preview-embed-script.js";
 const TWEAKCN_EMBED_SCRIPT_TAG = `<script src="${SCRIPT_URL}"></script>`;
 
-export function DynamicBlockViewer({
+export function DynamicWebsitePreview({
   className,
   name,
   allowCrossOrigin = false,
   ...props
 }: React.ComponentPropsWithoutRef<"div"> & {
   name: string;
-  dynamic?: boolean;
   allowCrossOrigin?: boolean;
 }) {
   return (
-    <DynamicBlockViewerProvider allowCrossOrigin={allowCrossOrigin}>
-      <div
-        className={cn(
-          "group/block-view-wrapper bg-background @container isolate flex size-full min-w-0 flex-col overflow-clip",
-          className
-        )}
-        {...props}
-      >
-        <BlockViewerToolbar name={name} toolbarControls={<DynamicToolbarControls />} />
-        <BlockViewerDisplay name={name}>
-          <DynamicIframeContent />
-        </BlockViewerDisplay>
-      </div>
-    </DynamicBlockViewerProvider>
+    <DynamicWebsitePreviewProvider allowCrossOrigin={allowCrossOrigin}>
+      <BlockViewerProvider>
+        <div
+          className={cn(
+            "group/block-view-wrapper bg-background @container isolate flex size-full min-w-0 flex-col overflow-clip",
+            className
+          )}
+          {...props}
+        >
+          <BlockViewerToolbar name={name} toolbarControls={<DynamicToolbarControls />} />
+          <BlockViewerDisplay name={name}>
+            <DynamicIframeContent />
+          </BlockViewerDisplay>
+        </div>
+      </BlockViewerProvider>
+    </DynamicWebsitePreviewProvider>
   );
 }
 
-type DynamicBlockViewerContext = {
-  inputUrl: string;
-  setInputUrl: (url: string) => void;
-  currentUrl: string;
-  setCurrentUrl: (url: string) => void;
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
-  error: string | null;
-  setError: (error: string | null) => void;
-  status: IframeStatus;
-  retryValidation: () => void;
-  allowCrossOrigin: boolean;
-  iframeRef: React.RefObject<HTMLIFrameElement | null>; // Ref for the iframe element
-};
+type DynamicWebsitePreviewContextType = ReturnType<typeof useWebsitePreview> &
+  Omit<ReturnType<typeof useIframeThemeInjector>, "ref">;
 
-const DynamicBlockViewerContext = React.createContext<DynamicBlockViewerContext | null>(null);
+const DynamicWebsitePreviewContext = React.createContext<DynamicWebsitePreviewContextType | null>(
+  null
+);
 
-function useDynamicBlockViewer() {
-  const context = React.useContext(DynamicBlockViewerContext);
+function useDynamicWebsitePreview() {
+  const context = React.useContext(DynamicWebsitePreviewContext);
   if (!context) {
-    throw new Error("useDynamicBlockViewer must be used within a DynamicBlockViewerProvider.");
+    throw new Error(
+      "useDynamicWebsitePreview must be used within a DynamicWebsitePreviewProvider."
+    );
   }
   return context;
 }
 
-function DynamicBlockViewerProvider({
+function DynamicWebsitePreviewProvider({
   children,
   allowCrossOrigin = false,
 }: {
   children: React.ReactNode;
   allowCrossOrigin?: boolean;
 }) {
-  const [inputUrl, setInputUrl] = useState("");
-  const [currentUrl, setCurrentUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const websitePreviewState = useWebsitePreview({ allowCrossOrigin });
 
-  // The hook provides the iframe ref and status
-  const {
-    ref: iframeRef,
-    status,
-    retryValidation,
-  } = useIframeThemeInjector({
-    allowCrossOrigin: allowCrossOrigin && !!currentUrl,
+  const { status, retryValidation } = useIframeThemeInjector({
+    allowCrossOrigin: allowCrossOrigin && !!websitePreviewState.currentUrl,
+    iframeRef: websitePreviewState.iframeRef,
   });
 
+  const contextValue = {
+    ...websitePreviewState,
+    status,
+    retryValidation,
+  };
+
   return (
-    <BlockViewerProvider>
-      <DynamicBlockViewerContext.Provider
-        value={{
-          inputUrl,
-          setInputUrl,
-          currentUrl,
-          setCurrentUrl,
-          isLoading,
-          setIsLoading,
-          error,
-          setError,
-          status,
-          retryValidation,
-          allowCrossOrigin,
-          iframeRef,
-        }}
-      >
-        {children}
-      </DynamicBlockViewerContext.Provider>
-    </BlockViewerProvider>
+    <DynamicWebsitePreviewContext.Provider value={contextValue}>
+      {children}
+    </DynamicWebsitePreviewContext.Provider>
   );
 }
 
@@ -146,68 +124,12 @@ function DynamicToolbarControls() {
     inputUrl,
     setInputUrl,
     currentUrl,
-    setCurrentUrl,
     isLoading,
-    setIsLoading,
-    setError,
+    loadUrl,
+    refreshIframe,
+    openInNewTab,
     allowCrossOrigin,
-    iframeRef,
-  } = useDynamicBlockViewer();
-
-  const loadUrl = () => {
-    if (!inputUrl.trim()) {
-      setError("Please enter a valid URL");
-      return;
-    }
-
-    // Add protocol if missing
-    let formattedUrl = inputUrl.trim();
-    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
-
-    // Always set loading state and clear errors
-    setIsLoading(true);
-    setError(null);
-
-    // Update current URL state
-    setCurrentUrl(formattedUrl);
-
-    // Force iframe to reload even if URL is the same
-    if (iframeRef.current) {
-      try {
-        // Add cache busting parameter to force reload
-        const url = new URL(formattedUrl);
-        url.searchParams.set("_t", Date.now().toString());
-        iframeRef.current.src = url.toString();
-      } catch {
-        // Fallback: just set the URL directly if URL constructor fails
-        iframeRef.current.src = formattedUrl + `?_t=${Date.now()}`;
-      }
-    }
-  };
-
-  const refreshIframe = () => {
-    if (!currentUrl) return;
-    setIsLoading(true);
-    setError(null);
-    // Force iframe refresh with cache busting
-    if (iframeRef.current) {
-      try {
-        const url = new URL(currentUrl);
-        url.searchParams.set("_refresh", Date.now().toString());
-        iframeRef.current.src = url.toString();
-      } catch {
-        // Fallback: just append query parameter
-        iframeRef.current.src = currentUrl + `?_refresh=${Date.now()}`;
-      }
-    }
-  };
-
-  const openInNewTab = () => {
-    if (!currentUrl) return;
-    window.open(currentUrl, "_blank", "noopener,noreferrer");
-  };
+  } = useDynamicWebsitePreview();
 
   return (
     <div className="flex size-full items-center gap-1">
@@ -273,51 +195,14 @@ function DynamicIframeContent() {
   const {
     currentUrl,
     isLoading,
-    setIsLoading,
     error,
-    setError,
     status,
     retryValidation,
     allowCrossOrigin,
     iframeRef,
-  } = useDynamicBlockViewer();
-  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearLoadingTimeout = () => {
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-      loadingTimeoutRef.current = null;
-    }
-  };
-
-  const handleIframeLoad = () => {
-    clearLoadingTimeout();
-    setIsLoading(false);
-    setError(null);
-  };
-
-  // Set up timeout when loading starts
-  useEffect(() => {
-    if (isLoading && currentUrl) {
-      clearLoadingTimeout(); // Clear any existing timeout
-
-      loadingTimeoutRef.current = setTimeout(() => {
-        setIsLoading(false);
-        setError("Loading timeout - the website may be taking too long to respond");
-        loadingTimeoutRef.current = null;
-      }, 5000); // 5 second timeout
-
-      return clearLoadingTimeout;
-    }
-  }, [isLoading, currentUrl, setIsLoading, setError]);
-
-  const handleIframeError = () => {
-    clearLoadingTimeout();
-    setIsLoading(false);
-    setError(
-      "Failed to load website. This could be due to CORS restrictions or the site blocking iframes."
-    );
-  };
+    handleIframeLoad,
+    handleIframeError,
+  } = useDynamicWebsitePreview();
 
   if (!currentUrl && !error) {
     return (

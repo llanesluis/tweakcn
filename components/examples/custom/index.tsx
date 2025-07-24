@@ -1,5 +1,5 @@
-import { DynamicBlockViewer } from "@/components/dynamic-block-viewer";
+import { DynamicWebsitePreview } from "@/components/dynamic-website-preview";
 
 export default function CustomDemo() {
-  return <DynamicBlockViewer name="Custom Website Preview" allowCrossOrigin />;
+  return <DynamicWebsitePreview name="Custom Website Preview" allowCrossOrigin />;
 }
