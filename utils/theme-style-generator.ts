@@ -68,7 +68,7 @@ const generateShadowVariables = (shadowMap: Record<string, string>): string => {
   --shadow-2xl: ${shadowMap["shadow-2xl"]};`;
 };
 
-type GenerateVarsPreferences = {
+export type GenerateVarsPreferences = {
   includeFontVariables?: boolean;
 };
 
@@ -200,12 +200,27 @@ const generateTailwindV4ThemeInline = (
   );
 };
 
-const generateTailwindV3Config = (_themeStyles: ThemeStyles): string => {
-  return `/** @type {import('tailwindcss').Config} */
+const generateTailwindV3ConfigFile = (
+  _themeStyles: ThemeStyles,
+  preferences: GenerateVarsPreferences
+): string => {
+  const { includeFontVariables = true } = preferences;
+
+  const fontFamilyBlock = includeFontVariables
+    ? `fontFamily: {
+        sans: "var(--font-sans)",
+        serif: "var(--font-serif)",
+        mono: "var(--font-mono)",
+      },`
+    : "";
+
+  const code = `
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
   theme: {
     extend: {
+      ${fontFamilyBlock}
       colors: {
         border: "var(--border)",
         input: "var(--input)",
@@ -263,14 +278,15 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      fontFamily: {
-        sans: ["var(--font-sans)"],
-        serif: ["var(--font-serif)"],
-        mono: ["var(--font-mono)"],
-      },
     },
   },
 }`;
+
+  return code
+    .trim()
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .join("\n");
 };
 
 export const generateThemeCode = (
@@ -287,7 +303,7 @@ export const generateThemeCode = (
     throw new Error("Invalid theme styles: missing light or dark mode");
   }
 
-  const themeStyles = themeEditorState.styles as ThemeStyles;
+  const themeStyles = themeEditorState.styles;
   const formatColor = (color: string) => colorFormatter(color, colorFormat, tailwindVersion);
 
   const lightTheme = generateThemeVariables(themeStyles, "light", formatColor, preferences);
@@ -303,9 +319,9 @@ export const generateThemeCode = (
   return `${lightTheme}\n\n${darkTheme}${tailwindV4Theme}${bodyLetterSpacing}`;
 };
 
-export const generateTailwindConfigCode = (
+export const generateTailwindConfigFileCode = (
   themeEditorState: ThemeEditorState,
-  _tailwindVersion: "3" | "4" = "3"
+  preferences: GenerateVarsPreferences = {}
 ): string => {
   if (
     !themeEditorState ||
@@ -315,6 +331,6 @@ export const generateTailwindConfigCode = (
     throw new Error("Invalid theme styles: missing light or dark mode");
   }
 
-  const themeStyles = themeEditorState.styles as ThemeStyles;
-  return generateTailwindV3Config(themeStyles);
+  const themeStyles = themeEditorState.styles;
+  return generateTailwindV3ConfigFile(themeStyles, preferences);
 };

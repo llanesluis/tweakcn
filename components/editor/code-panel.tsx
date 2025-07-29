@@ -16,7 +16,11 @@ import { usePreferencesStore } from "@/store/preferences-store";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 import { ColorFormat } from "@/types";
 import { ThemeEditorState } from "@/types/editor";
-import { generateTailwindConfigCode, generateThemeCode } from "@/utils/theme-style-generator";
+import {
+  generateTailwindConfigFileCode,
+  generateThemeCode,
+  GenerateVarsPreferences,
+} from "@/utils/theme-style-generator";
 import { Check, Copy, Heart, Settings } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { useMemo, useState } from "react";
@@ -47,10 +51,12 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
   );
   const getAvailableColorFormats = usePreferencesStore((state) => state.getAvailableColorFormats);
 
-  const code = generateThemeCode(themeEditorState, colorFormat, tailwindVersion, {
+  const preferences: GenerateVarsPreferences = {
     includeFontVariables,
-  });
-  const configCode = generateTailwindConfigCode(themeEditorState, tailwindVersion);
+  };
+
+  const code = generateThemeCode(themeEditorState, colorFormat, tailwindVersion, preferences);
+  const configCode = generateTailwindConfigFileCode(themeEditorState, preferences);
 
   const getRegistryCommand = (preset: string) => {
     const url = isSavedPreset
