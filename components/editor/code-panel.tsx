@@ -23,14 +23,20 @@ import {
 } from "@/utils/theme-style-generator";
 import { Check, Copy, Heart, Settings } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface CodePanelProps {
   themeEditorState: ThemeEditorState;
 }
 
+const EXPORT_CODE_TABS = {
+  CSS_CODE: "css-code",
+  TAILWIND_CONFIG_CODE: "tailwind-config-code",
+};
+
 const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
   const [registryCopied, setRegistryCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState(EXPORT_CODE_TABS.CSS_CODE);
   const [copied, setCopied] = useState(false);
   const posthog = usePostHog();
   const { handleSaveClick } = useDialogActions();
@@ -108,6 +114,13 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
   const showRegistryCommand = useMemo(() => {
     return preset && preset !== "default" && !hasUnsavedChanges();
   }, [preset, hasUnsavedChanges]);
+
+  // Auto-switch to CSS file when switching from v3 to v4
+  useEffect(() => {
+    if (tailwindVersion === "4" && activeTab === EXPORT_CODE_TABS.TAILWIND_CONFIG_CODE) {
+      setActiveTab(EXPORT_CODE_TABS.CSS_CODE);
+    }
+  }, [tailwindVersion, activeTab]);
 
   const PackageManagerHeader = ({ actionButton }: { actionButton: React.ReactNode }) => (
     <div className="flex border-b">
@@ -237,16 +250,20 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
         </Popover>
       </div>
       <Tabs
-        defaultValue="index.css"
+        value={activeTab}
+        onValueChange={setActiveTab}
         className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border"
       >
         <div className="bg-muted/50 flex flex-none items-center justify-between border-b px-4 py-2">
           <TabsList className="h-8 bg-transparent p-0">
-            <TabsTrigger value="index.css" className="h-7 px-3 text-sm font-medium">
+            <TabsTrigger value={EXPORT_CODE_TABS.CSS_CODE} className="h-8 px-2 text-sm font-medium">
               index.css
             </TabsTrigger>
             {tailwindVersion === "3" && (
-              <TabsTrigger value="tailwind.config.ts" className="h-7 px-3 text-sm font-medium">
+              <TabsTrigger
+                value={EXPORT_CODE_TABS.TAILWIND_CONFIG_CODE}
+                className="h-8 px-2 text-sm font-medium"
+              >
                 tailwind.config.ts
               </TabsTrigger>
             )}
@@ -275,7 +292,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
           </div>
         </div>
 
-        <TabsContent value="index.css" className="overflow-hidden">
+        <TabsContent value={EXPORT_CODE_TABS.CSS_CODE} className="overflow-hidden">
           <ScrollArea className="relative h-full">
             <pre className="h-full p-4 text-sm">
               <code>{code}</code>
@@ -285,7 +302,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
         </TabsContent>
 
         {tailwindVersion === "3" && (
-          <TabsContent value="tailwind.config.ts" className="overflow-hidden">
+          <TabsContent value={EXPORT_CODE_TABS.TAILWIND_CONFIG_CODE} className="overflow-hidden">
             <ScrollArea className="relative h-full">
               <pre className="h-full p-4 text-sm">
                 <code>{configCode}</code>
