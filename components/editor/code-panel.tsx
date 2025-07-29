@@ -16,7 +16,7 @@ import { usePreferencesStore } from "@/store/preferences-store";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 import { ColorFormat } from "@/types";
 import { ThemeEditorState } from "@/types/editor";
-import { generateThemeCode } from "@/utils/theme-style-generator";
+import { generateTailwindConfigCode, generateThemeCode } from "@/utils/theme-style-generator";
 import { Check, Copy, Heart, Settings } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { useMemo, useState } from "react";
@@ -50,6 +50,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
   const code = generateThemeCode(themeEditorState, colorFormat, tailwindVersion, {
     includeFontVariables,
   });
+  const configCode = generateTailwindConfigCode(themeEditorState, tailwindVersion);
 
   const getRegistryCommand = (preset: string) => {
     const url = isSavedPreset
@@ -238,6 +239,11 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
             <TabsTrigger value="index.css" className="h-7 px-3 text-sm font-medium">
               index.css
             </TabsTrigger>
+            {tailwindVersion === "3" && (
+              <TabsTrigger value="tailwind.config.ts" className="h-7 px-3 text-sm font-medium">
+                tailwind.config.ts
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <div className="flex items-center gap-2">
@@ -271,6 +277,17 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
             <ScrollBar />
           </ScrollArea>
         </TabsContent>
+
+        {tailwindVersion === "3" && (
+          <TabsContent value="tailwind.config.ts" className="overflow-hidden">
+            <ScrollArea className="relative h-full">
+              <pre className="h-full p-4 text-sm">
+                <code>{configCode}</code>
+              </pre>
+              <ScrollBar />
+            </ScrollArea>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
