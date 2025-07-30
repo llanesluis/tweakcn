@@ -143,6 +143,7 @@ const TWEAKCN_MESSAGE = {
   THEME_UPDATE: "TWEAKCN_THEME_UPDATE",
   THEME_APPLIED: "TWEAKCN_THEME_APPLIED",
   EMBED_LOADED: "TWEAKCN_EMBED_LOADED",
+  EMBED_ERROR: "TWEAKCN_EMBED_ERROR",
 };
 
 // ----- MAIN SCRIPT -----
@@ -157,9 +158,13 @@ const TWEAKCN_MESSAGE = {
     if (event.source !== window.parent) return;
     // Verify the message has the expected structure
     if (!event.data || typeof event.data.type !== "string") return;
-    // TODO: Once it's live, verify the origin of the message for security
-    // const allowedOrigin = 'https://tweakcn.com';
-    // if (event.origin !== allowedOrigin) return;    
+
+    // TODO: Remove localhost once this is live
+    const ALLOWED_ORIGINS = ['https://tweakcn.com', 'http://localhost:3000'];
+    if (!ALLOWED_ORIGINS.includes(event.origin)){
+      sendMessageToParent({ type: TWEAKCN_MESSAGE.EMBED_ERROR, payload: { error: "Origin not allowed. Preview failed to establish the connection with tweakcn." } });
+      return;
+    } ;    
     
     const { type, payload } = event.data;
 
