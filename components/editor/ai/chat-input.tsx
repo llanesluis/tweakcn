@@ -3,31 +3,36 @@
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { useAIChatForm } from "@/hooks/use-ai-chat-form";
-import { useAIThemeGenerationCore } from "@/hooks/use-ai-theme-generation-core";
+import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
 import { useGuards } from "@/hooks/use-guards";
 import { usePostLoginAction } from "@/hooks/use-post-login-action";
 import { MAX_IMAGE_FILES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useAIChatStore } from "@/store/ai-chat-store";
 import { AIPromptData } from "@/types/ai";
 import { ArrowUp, Loader, Plus, StopCircle } from "lucide-react";
 import { AIChatFormBody } from "./ai-chat-form-body";
 import { AlertBanner } from "./alert-banner";
 import { ImageUploader } from "./image-uploader";
+
 type ThemeGenerationPayload = {
-  promptData: AIPromptData | null;
+  promptData: AIPromptData;
   options: {
     shouldClearLocalDraft?: boolean;
   };
 };
 
+interface ChatInputProps {
+  onThemeGeneration: (promptData: AIPromptData) => Promise<void>;
+  isGeneratingTheme: boolean;
+  onCancelThemeGeneration: () => void;
+}
+
 export function ChatInput({
-  onGenerateTheme,
-}: {
-  onGenerateTheme: (promptData: AIPromptData | null) => Promise<void>;
-}) {
-  const { messages, clearMessages } = useAIChatStore();
-  const { loading: aiGenerateLoading, cancelThemeGeneration } = useAIThemeGenerationCore();
+  onThemeGeneration,
+  isGeneratingTheme,
+  onCancelThemeGeneration,
+}: ChatInputProps) {
+  const { messages, startNewChat } = useAIGenerateChatContext();
   const { checkValidSession, checkValidSubscription } = useGuards();
 
   const {
@@ -46,7 +51,7 @@ export function ChatInput({
   } = useAIChatForm();
 
   const handleNewChat = () => {
-    clearMessages();
+    startNewChat();
     clearLocalDraft();
     clearUploadedImages();
   };
@@ -59,7 +64,7 @@ export function ChatInput({
       clearUploadedImages();
     }
 
-    onGenerateTheme(promptData);
+    onThemeGeneration(promptData);
   };
 
   const handleGenerateSubmit = async () => {
@@ -95,7 +100,7 @@ export function ChatInput({
       <div className="bg-background relative isolate z-10 flex size-full min-h-[100px] flex-1 flex-col gap-2 overflow-hidden rounded-lg border p-2 shadow-xs">
         <AIChatFormBody
           isUserDragging={isUserDragging}
-          aiGenerateLoading={aiGenerateLoading}
+          disabled={isGeneratingTheme}
           uploadedImages={uploadedImages}
           handleImagesUpload={handleImagesUpload}
           handleImageRemove={handleImageRemove}
@@ -110,7 +115,7 @@ export function ChatInput({
               variant="outline"
               size="sm"
               onClick={handleNewChat}
-              disabled={aiGenerateLoading || messages.length === 0}
+              disabled={isGeneratingTheme || messages.length === 0}
               className="flex items-center gap-1.5 shadow-none"
             >
               <Plus />
@@ -124,18 +129,18 @@ export function ChatInput({
               onImagesUpload={handleImagesUpload}
               onClick={() => fileInputRef.current?.click()}
               disabled={
-                aiGenerateLoading ||
+                isGeneratingTheme ||
                 uploadedImages.some((img) => img.loading) ||
                 uploadedImages.length >= MAX_IMAGE_FILES
               }
             />
 
-            {aiGenerateLoading ? (
+            {isGeneratingTheme ? (
               <TooltipWrapper label="Cancel generation" asChild>
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={cancelThemeGeneration}
+                  onClick={onCancelThemeGeneration}
                   className={cn("flex items-center gap-1.5 shadow-none", "@max-[350px]/form:w-8")}
                 >
                   <StopCircle />
@@ -148,9 +153,9 @@ export function ChatInput({
                   size="sm"
                   className="size-8 shadow-none"
                   onClick={handleGenerateSubmit}
-                  disabled={isEmptyPrompt || isSomeImageUploading || aiGenerateLoading}
+                  disabled={isEmptyPrompt || isSomeImageUploading || isGeneratingTheme}
                 >
-                  {aiGenerateLoading ? <Loader className="animate-spin" /> : <ArrowUp />}
+                  {isGeneratingTheme ? <Loader className="animate-spin" /> : <ArrowUp />}
                 </Button>
               </TooltipWrapper>
             )}

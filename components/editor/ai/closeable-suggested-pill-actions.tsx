@@ -2,7 +2,6 @@
 
 import { HorizontalScrollArea } from "@/components/horizontal-scroll-area";
 import { Button } from "@/components/ui/button";
-import { useAIThemeGenerationCore } from "@/hooks/use-ai-theme-generation-core";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { AIPromptData } from "@/types/ai";
 import { createCurrentThemePrompt } from "@/utils/ai/ai-prompt";
@@ -12,10 +11,11 @@ import { PillActionButton } from "./pill-action-button";
 
 export function ClosableSuggestedPillActions({
   onGenerateTheme,
+  isGeneratingTheme,
 }: {
-  onGenerateTheme: (promptData: AIPromptData | null) => Promise<void>;
+  onGenerateTheme: (promptData: AIPromptData) => void;
+  isGeneratingTheme: boolean;
 }) {
-  const { loading: aiIsGenerating } = useAIThemeGenerationCore();
   const { chatSuggestionsOpen, setChatSuggestionsOpen } = usePreferencesStore();
 
   const handleSetPrompt = async (prompt: string) => {
@@ -47,7 +47,7 @@ export function ClosableSuggestedPillActions({
           <PillActionButton
             key={key}
             onClick={() => handleSetPrompt(prompt)}
-            disabled={aiIsGenerating}
+            disabled={isGeneratingTheme}
           >
             <Sparkles /> {label}
           </PillActionButton>

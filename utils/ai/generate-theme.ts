@@ -1,5 +1,5 @@
 import { themeStylePropsSchema } from "@/types/theme";
-import { coreMessageSchema } from "ai";
+import { modelMessageSchema } from "ai";
 import { z } from "zod";
 
 export const SYSTEM_PROMPT = `# Role
@@ -39,13 +39,10 @@ export const SYSTEM_PROMPT = `# Role
     - "Background darker/lighter" → modify surface colors only
     - Specific tokens requests → change those tokens + their direct foreground pairs
     - "Change [colors] in light/dark mode" → change those colors only in the requested mode, leave the other mode unchanged. (e.g. "Make primary color in light mode a little darker" → only change primary in light mode, keep dark mode unchanged)
-    - Maintain color harmony across all related tokens
-
-    # Text Description
-    Fill the \`text\` field in a friendly way, for example: "I've generated..." or "Alright, I've whipped up..."`;
+    - Maintain color harmony across all related tokens`;
 
 export const requestSchema = z.object({
-  messages: z.array(coreMessageSchema),
+  messages: z.array(modelMessageSchema),
 });
 
 // Create a new schema based on themeStylePropsSchema excluding 'spacing'
@@ -55,7 +52,11 @@ const themeStylePropsWithoutSpacing = themeStylePropsSchema.omit({
 
 // Define the main theme schema using the modified props schema
 export const responseSchema = z.object({
-  text: z.string().describe("A concise paragraph on the generated theme"),
+  text: z
+    .string()
+    .describe(
+      "A concise paragraph on the generated theme. Must be a friendly way to describe the theme. For example: 'I've generated a theme for you...' or 'Alright, I've whipped up a theme for you...'"
+    ),
   theme: z.object({
     light: themeStylePropsWithoutSpacing,
     dark: themeStylePropsWithoutSpacing,

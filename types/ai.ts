@@ -1,3 +1,4 @@
+import { UIMessage } from "ai";
 import { type ThemeStyleProps, type ThemeStyles } from "./theme";
 
 export type MentionReference = {
@@ -9,6 +10,7 @@ export type MentionReference = {
   };
 };
 
+// TODO: Rethink types
 export type PromptImage = {
   url: string;
 };
@@ -19,22 +21,10 @@ export type AIPromptData = {
   images?: PromptImage[];
 };
 
-export type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  timestamp: number;
+export type MessageMetadata = {
   promptData?: AIPromptData;
-  content?: string;
   themeStyles?: ThemeStyles;
   isError?: boolean;
 };
 
-export type UserMessage = {
-  promptData: AIPromptData;
-};
-
-export type AssistantMessage = {
-  content: string;
-  themeStyles?: ThemeStyles;
-  isError?: boolean;
-};
+export type ChatMessage = UIMessage<MessageMetadata>;

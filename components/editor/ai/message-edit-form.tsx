@@ -6,7 +6,7 @@ import { useImageUpload } from "@/hooks/use-image-upload";
 import { imageUploadReducer } from "@/hooks/use-image-upload-reducer";
 import { AI_PROMPT_CHARACTER_LIMIT, MAX_IMAGE_FILES, MAX_IMAGE_FILE_SIZE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { AIPromptData, type ChatMessage as ChatMessageType } from "@/types/ai";
+import { AIPromptData, type ChatMessage } from "@/types/ai";
 import {
   convertJSONContentToPromptData,
   convertPromptDataToJSONContent,
@@ -21,13 +21,19 @@ import { ImageUploader } from "./image-uploader";
 import { UploadedImagePreview } from "./uploaded-image-preview";
 
 interface MessageEditFormProps {
-  message: ChatMessageType;
+  message: ChatMessage;
   onEditSubmit: (newPromptData: AIPromptData) => void;
   onEditCancel: () => void;
+  disabled: boolean;
 }
 
-export function MessageEditForm({ message, onEditSubmit, onEditCancel }: MessageEditFormProps) {
-  const promptData = message.promptData;
+export function MessageEditForm({
+  message,
+  onEditSubmit,
+  onEditCancel,
+  disabled,
+}: MessageEditFormProps) {
+  const promptData = message.metadata?.promptData;
 
   const [editJsonContent, setEditJsonContent] = useState<JSONContent>(() => {
     if (!promptData) return { type: "doc", content: [] };
@@ -98,7 +104,8 @@ export function MessageEditForm({ message, onEditSubmit, onEditCancel }: Message
 
       <CustomTextarea
         onContentChange={setEditJsonContent}
-        onGenerate={handleEditConfirm}
+        onSubmit={handleEditConfirm}
+        disabled={disabled}
         characterLimit={AI_PROMPT_CHARACTER_LIMIT}
         onImagesPaste={handleImagesUpload}
         initialEditorContent={editJsonContent}
@@ -131,7 +138,7 @@ export function MessageEditForm({ message, onEditSubmit, onEditCancel }: Message
               size="sm"
               className="size-8 shadow-none"
               onClick={handleEditConfirm}
-              disabled={isSomeImageUploading || isEmptyPrompt}
+              disabled={isSomeImageUploading || isEmptyPrompt || disabled}
             >
               <Check />
             </Button>

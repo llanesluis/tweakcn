@@ -2,22 +2,25 @@ import Logo from "@/assets/logo.svg";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/store/editor-store";
-import { AIPromptData, type ChatMessage as ChatMessageType } from "@/types/ai";
+import { AIPromptData, type ChatMessage } from "@/types/ai";
 import { buildAIPromptRender } from "@/utils/ai/ai-prompt";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+
 import ColorPreview from "../theme-preview/color-preview";
 import { ChatImagePreview } from "./chat-image-preview";
 import { ChatThemePreview } from "./chat-theme-preview";
+import { LoadingLogo } from "./loading-logo";
 import { MessageControls } from "./message-controls";
 import { MessageEditForm } from "./message-edit-form";
 
 type MessageProps = {
-  message: ChatMessageType;
+  message: ChatMessage;
   onRetry: () => void;
   isEditing: boolean;
   onEdit: () => void;
   onEditSubmit: (newPromptData: AIPromptData) => void;
   onEditCancel: () => void;
+  isLastMessageStreaming: boolean;
+  isGeneratingTheme: boolean;
 };
 
 export default function Message({
@@ -27,32 +30,41 @@ export default function Message({
   onEdit,
   onEditSubmit,
   onEditCancel,
+  isLastMessageStreaming,
+  isGeneratingTheme,
 }: MessageProps) {
   const isUser = message.role === "user";
   const isAssistant = message.role === "assistant";
 
-  const parentRef = useRef<HTMLDivElement>(null);
-
   return (
     <div className={cn("flex w-full items-start gap-4", isUser ? "justify-end" : "justify-start")}>
       <div className={cn("flex w-full max-w-[90%] items-start")}>
-        <div
-          className={cn("group/message relative flex w-full flex-col gap-2 overflow-hidden")}
-          ref={parentRef}
-        >
+        <div className={cn("group/message relative flex w-full flex-col gap-2")}>
           {isUser && (
             <UserMessage
               message={message}
               isEditing={isEditing}
-              parentRef={parentRef}
               onRetry={onRetry}
               onEdit={onEdit}
               onEditSubmit={onEditSubmit}
               onEditCancel={onEditCancel}
+              isGeneratingTheme={isGeneratingTheme}
             />
           )}
 
-          {isAssistant && <AssistantMessage message={message} />}
+          {isAssistant && (
+            <AssistantMessage message={message} isLastMessageStreaming={isLastMessageStreaming} />
+          )}
+
+          {!isLastMessageStreaming && (
+            <MessageControls
+              message={message}
+              onRetry={onRetry}
+              onEdit={onEdit}
+              isEditing={isEditing}
+              isGeneratingTheme={isGeneratingTheme}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -60,95 +72,96 @@ export default function Message({
 }
 
 interface AssistantMessageProps {
-  message: ChatMessageType;
+  message: ChatMessage;
+  isLastMessageStreaming: boolean;
 }
 
-function AssistantMessage({ message }: AssistantMessageProps) {
+function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageProps) {
   const { themeState } = useEditorStore();
-  const msgContent = message.content || "";
 
   return (
     <div className="flex items-start gap-1.5">
-      <div
-        className={cn(
-          "border-border/50! bg-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full border select-none",
-          message.isError && "bg-destructive"
-        )}
-      >
-        <Logo
+      {isLastMessageStreaming ? (
+        <div className="relative flex size-6 shrink-0 items-center justify-center">
+          <LoadingLogo />
+        </div>
+      ) : (
+        <div
           className={cn(
-            "text-background size-full p-0.5",
-            message.isError && "text-destructive-foreground"
+            "border-border/50! bg-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full border select-none",
+            message.metadata?.isError && "bg-destructive"
           )}
-        />
-      </div>
-      <div className="relative flex flex-col gap-2">
-        <div className="w-fit text-sm">{msgContent}</div>
+        >
+          <Logo
+            className={cn(
+              "text-background size-full p-0.5",
+              message.metadata?.isError && "text-destructive-foreground"
+            )}
+          />
+        </div>
+      )}
 
-        {message.themeStyles && (
-          <ChatThemePreview themeStyles={message.themeStyles} className="p-0">
+      <div className="relative flex flex-col gap-2">
+        {message.parts.map((part, idx) => {
+          switch (part.type) {
+            case "text":
+              return (
+                <div key={idx} className="w-fit text-sm">
+                  {part.text}
+                </div>
+              );
+          }
+        })}
+
+        {message.metadata?.themeStyles && (
+          <ChatThemePreview themeStyles={message.metadata.themeStyles} className="p-0">
             <ScrollArea className="h-48">
               <div className="p-2">
-                <ColorPreview styles={message.themeStyles} currentMode={themeState.currentMode} />
+                <ColorPreview
+                  styles={message.metadata.themeStyles}
+                  currentMode={themeState.currentMode}
+                />
               </div>
             </ScrollArea>
           </ChatThemePreview>
         )}
-
-        <MessageControls message={message} />
       </div>
     </div>
   );
 }
 
 interface UserMessageProps {
-  message: ChatMessageType;
+  message: ChatMessage;
   isEditing: boolean;
-  parentRef: React.RefObject<HTMLDivElement | null>;
   onRetry: () => void;
   onEdit: () => void;
   onEditSubmit: (newPromptData: AIPromptData) => void;
   onEditCancel: () => void;
+  isGeneratingTheme: boolean;
 }
 
 function UserMessage({
   message,
   isEditing,
-  parentRef,
-  onRetry,
-  onEdit,
   onEditSubmit,
   onEditCancel,
+  isGeneratingTheme,
 }: UserMessageProps) {
-  const [messageWidth, setMessageWidth] = useState<number | undefined>(undefined);
+  const promptData = message.metadata?.promptData;
+  const shouldDisplayMsgContent = promptData?.content?.trim() != "";
 
-  useLayoutEffect(() => {
-    if (!isEditing) return;
-
-    function updateWidth() {
-      if (parentRef.current) setMessageWidth(parentRef.current.offsetWidth);
-    }
-    updateWidth();
-    // Track the parent element width changes
-    const observer = new window.ResizeObserver(updateWidth);
-    if (parentRef.current) observer.observe(parentRef.current);
-    return () => observer.disconnect();
-  }, [isEditing, parentRef]);
-
-  const shouldDisplayMsgContent = message.promptData?.content?.trim() != "";
-
-  const getDisplayContent = useCallback(() => {
-    if (message.promptData) {
-      return buildAIPromptRender(message.promptData);
+  const getDisplayContent = () => {
+    if (promptData) {
+      return buildAIPromptRender(promptData);
     }
 
-    return message.content || "";
-  }, [message.promptData, message.content]);
+    return message.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
+  };
 
   const msgContent = getDisplayContent();
 
-  const getImagesToDisplay = useCallback(() => {
-    const images = message.promptData?.images ?? [];
+  const getImagesToDisplay = () => {
+    const images = promptData?.images ?? [];
 
     if (images.length === 1) {
       return (
@@ -173,40 +186,35 @@ function UserMessage({
     }
 
     return null;
-  }, [message.promptData?.images]);
+  };
 
   const msgImages = getImagesToDisplay();
 
   if (isEditing) {
     return (
-      <div style={messageWidth ? { width: messageWidth } : undefined}>
-        <MessageEditForm
-          key={message.id}
-          message={message}
-          onEditSubmit={onEditSubmit}
-          onEditCancel={onEditCancel}
-        />
-      </div>
+      <MessageEditForm
+        key={message.id}
+        message={message}
+        onEditSubmit={onEditSubmit}
+        onEditCancel={onEditCancel}
+        disabled={isGeneratingTheme}
+      />
     );
   }
 
   return (
-    <div className="space-y-2">
-      <div className="relative flex flex-col gap-1">
-        {msgImages}
+    <div className="relative flex flex-col gap-1">
+      {msgImages}
 
-        {shouldDisplayMsgContent && (
-          <div
-            className={cn(
-              "bg-card/75 text-card-foreground/90 border-border/75! w-fit self-end rounded-lg border p-3 text-sm"
-            )}
-          >
-            {msgContent}
-          </div>
-        )}
-      </div>
-
-      <MessageControls message={message} onRetry={onRetry} onEdit={onEdit} isEditing={isEditing} />
+      {shouldDisplayMsgContent && (
+        <div
+          className={cn(
+            "bg-card/75 text-card-foreground/90 border-border/75! w-fit self-end rounded-lg border p-3 text-sm"
+          )}
+        >
+          {msgContent}
+        </div>
+      )}
     </div>
   );
 }
