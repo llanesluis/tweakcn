@@ -1,6 +1,8 @@
 import { ChatContainerContent, ChatContainerRoot } from "@/components/prompt-kit/chat-container";
+import { Loader } from "@/components/prompt-kit/loader";
 import { ScrollButton } from "@/components/prompt-kit/scroll-button";
 import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
+import { useFeedbackText } from "@/hooks/use-feedback-text";
 import { cn } from "@/lib/utils";
 import { AIPromptData, type ChatMessage } from "@/types/ai";
 import { useEffect, useRef, useState } from "react";
@@ -32,8 +34,12 @@ export function Messages({
     messages.filter((message) => message.role === "user").length
   );
 
-  const isSubmitting = status === "submitted";
-  const feedbackText = useFeedbackText(isSubmitting);
+  const isProcessing = status === "submitted";
+  const feedbackText = useFeedbackText({
+    showFeedbackText: isProcessing,
+    feedbackMessages: FEEDBACK_MESSAGES,
+    rotationIntervalInSeconds: 8,
+  });
 
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -106,18 +112,13 @@ export function Messages({
             })}
 
             {/* Loading message when AI is generating */}
-            {isSubmitting && (
-              <div className="flex gap-1.5 pb-8">
+            {isProcessing && (
+              <div className="flex items-center gap-1.5">
                 <div className="relative flex size-6 items-center justify-center">
                   <LoadingLogo />
                 </div>
 
-                <p className="inline-flex animate-pulse gap-0.25 delay-150">
-                  <span className="text-sm">{feedbackText}</span>
-                  <span className="animate-bounce delay-100">.</span>
-                  <span className="animate-bounce delay-200">.</span>
-                  <span className="animate-bounce delay-300">.</span>
-                </p>
+                <Loader variant="text-shimmer" text={feedbackText} size="md" />
               </div>
             )}
           </div>
@@ -135,41 +136,4 @@ export function Messages({
   );
 }
 
-const FEEDBACK_MESSAGES = [
-  "Generating", // 0-7s
-  "Tweaking color tokens", // 8-15s
-  "This might take some time", // 16-23s
-  "Generating a good theme takes time", // 24-31s
-  "Still working on your theme", // 32-39s
-  "Almost there", // 40s+
-];
-
-const ROTATION_INTERVAL_IN_SECONDS = 8;
-
-function useFeedbackText(isSubmitting: boolean) {
-  const [elapsedTimeGenerating, setElapsedTimeGenerating] = useState(0);
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (isSubmitting) {
-      setElapsedTimeGenerating(0);
-
-      interval = setInterval(() => {
-        setElapsedTimeGenerating((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setElapsedTimeGenerating(0);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isSubmitting]);
-
-  const feedbackIndex = Math.min(
-    Math.floor(elapsedTimeGenerating / ROTATION_INTERVAL_IN_SECONDS),
-    FEEDBACK_MESSAGES.length - 1
-  );
-  const feedbackText = FEEDBACK_MESSAGES[feedbackIndex];
-  return feedbackText;
-}
+const FEEDBACK_MESSAGES = ["Processing...", "Working on your theme...", "Almost there..."];
