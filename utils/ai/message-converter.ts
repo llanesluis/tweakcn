@@ -35,7 +35,7 @@ export async function convertMessagesToModelMessages(
                 type: "text",
                 text: `Here is an SVG image for analysis:\n\`\`\`svg\n${svgMarkup}\n\`\`\``,
               });
-            } catch (error) {
+            } catch {
               userContentParts.push({
                 type: "image",
                 image: image.url,
@@ -81,6 +81,8 @@ export async function convertMessagesToModelMessages(
         text: msgTextContent,
       });
 
+      // If the assistant message has themeStyles attached to the metadata,
+      // we need to add it to the assistant content to provide more context for the next generations
       if (themeStyles) {
         assistantContentParts.push({
           type: "text",

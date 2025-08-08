@@ -32,6 +32,7 @@ export function AIGenerateChatProvider({ children }: { children: React.ReactNode
     transport: new DefaultChatTransport({
       api: "/api/generate-theme",
     }),
+    // TODO: Check if this way of handling errors is correct
     onError: (error) => {
       let message = "Failed to generate theme. Please try again.";
 
@@ -66,13 +67,8 @@ export function AIGenerateChatProvider({ children }: { children: React.ReactNode
     onFinish: ({ message }) => {
       queryClient.invalidateQueries({ queryKey: [SUBSCRIPTION_STATUS_QUERY_KEY] });
 
+      // TODO: Apply the theme to the editor when the assistant has the themeStyles attached to the metadata?
       if (message.metadata?.themeStyles) {
-        // TODO: Apply the theme to the editor
-
-        toast({
-          title: "Theme generated",
-          description: "Your AI-generated theme has been applied.",
-        });
       }
     },
   });
