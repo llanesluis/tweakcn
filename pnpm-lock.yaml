@@ -30,8 +30,8 @@ importers:
         specifier: ^0.24.1
         version: 0.24.1
       '@hookform/resolvers':
-        specifier: ^5.0.1
-        version: 5.0.1(react-hook-form@7.55.0(react@19.1.0))
+        specifier: ^5.2.1
+        version: 5.2.1(react-hook-form@7.62.0(react@19.1.0))
       '@lexical/react':
         specifier: ^0.31.0
         version: 0.31.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(yjs@13.6.26)
@@ -243,8 +243,8 @@ importers:
         specifier: ^14.3.8
         version: 14.3.8(react@19.1.0)
       react-hook-form:
-        specifier: ^7.55.0
-        version: 7.55.0(react@19.1.0)
+        specifier: ^7.62.0
+        version: 7.62.0(react@19.1.0)
       react-resizable-panels:
         specifier: ^2.1.7
         version: 2.1.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1358,8 +1358,8 @@ packages:
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
 
-  '@hookform/resolvers@5.0.1':
-    resolution: {integrity: sha512-u/+Jp83luQNx9AdyW2fIPGY6Y7NG68eN2ZW8FOJYL+M0i4s49+refdJdOp/A9n9HFQtQs3HIDHQvX3ZET2o7YA==}
+  '@hookform/resolvers@5.2.1':
+    resolution: {integrity: sha512-u0+6X58gkjMcxur1wRWokA7XsiiBJ6aK17aPZxhkoYiK5J+HcTx0Vhu9ovXe6H+dVpO6cjrn2FkJTryXEMlryQ==}
     peerDependencies:
       react-hook-form: ^7.55.0
 
@@ -5400,8 +5400,8 @@ packages:
     peerDependencies:
       react: '>=16.13.1'
 
-  react-hook-form@7.55.0:
-    resolution: {integrity: sha512-XRnjsH3GVMQz1moZTW53MxfoWN7aDpUg/GpVNc4A3eXRVNdGXfbzJ4vM4aLQ8g6XCUh1nIbx70aaNCl7kxnjog==}
+  react-hook-form@7.62.0:
+    resolution: {integrity: sha512-7KWFejc98xqG/F4bAxpL41NB3o1nnvQO1RWZT3TqRZYL8RryQETGfEdVnJN2fy1crCiBLLjkRBVK05j24FxJGA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -7256,10 +7256,10 @@ snapshots:
 
   '@hexagon/base64@1.1.28': {}
 
-  '@hookform/resolvers@5.0.1(react-hook-form@7.55.0(react@19.1.0))':
+  '@hookform/resolvers@5.2.1(react-hook-form@7.62.0(react@19.1.0))':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.55.0(react@19.1.0)
+      react-hook-form: 7.62.0(react@19.1.0)
 
   '@humanfs/core@0.19.1': {}
 
@@ -7751,7 +7751,7 @@ snapshots:
       eventemitter3: 5.0.1
       markdown-to-jsx: 7.7.10(react@19.1.0)
       react: 19.1.0
-      react-hook-form: 7.55.0(react@19.1.0)
+      react-hook-form: 7.62.0(react@19.1.0)
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
       - '@types/react'
@@ -7808,7 +7808,7 @@ snapshots:
       react: 19.1.0
       react-day-picker: 8.10.1(date-fns@3.6.0)(react@19.1.0)
       react-dom: 19.1.0(react@19.1.0)
-      react-hook-form: 7.55.0(react@19.1.0)
+      react-hook-form: 7.62.0(react@19.1.0)
       react-timeago: 7.2.0(react@19.1.0)
       tailwind-merge: 2.6.0
     transitivePeerDependencies:
@@ -11491,7 +11491,7 @@ snapshots:
       '@babel/runtime': 7.27.0
       react: 19.1.0
 
-  react-hook-form@7.55.0(react@19.1.0):
+  react-hook-form@7.62.0(react@19.1.0):
     dependencies:
       react: 19.1.0
 
