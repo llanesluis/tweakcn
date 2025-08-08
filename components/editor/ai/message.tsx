@@ -1,15 +1,15 @@
 import Logo from "@/assets/logo.svg";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/store/editor-store";
 import { AIPromptData, type ChatMessage } from "@/types/ai";
 import { buildAIPromptRender } from "@/utils/ai/ai-prompt";
 
+import { ScrollArea } from "@/components/ui/scroll-area";
 import ColorPreview from "../theme-preview/color-preview";
 import { ChatImagePreview } from "./chat-image-preview";
 import { ChatThemePreview } from "./chat-theme-preview";
 import { LoadingLogo } from "./loading-logo";
-import { MessageControls } from "./message-controls";
+import { MessageActions } from "./message-actions";
 import { MessageEditForm } from "./message-edit-form";
 
 type MessageProps = {
@@ -57,7 +57,7 @@ export default function Message({
           )}
 
           {!isLastMessageStreaming && (
-            <MessageControls
+            <MessageActions
               message={message}
               onRetry={onRetry}
               onEdit={onEdit}
@@ -86,6 +86,8 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
           <LoadingLogo />
         </div>
       ) : (
+        // TODO: When the message was stopped, should display correcly in the UI
+        // with metadata is not the way...
         <div
           className={cn(
             "border-border/50! bg-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full border select-none",
@@ -101,30 +103,44 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
         </div>
       )}
 
-      <div className="relative flex flex-col gap-2">
+      <div className="relative flex flex-col gap-3">
         {message.parts.map((part, idx) => {
           switch (part.type) {
-            case "text":
+            case "reasoning":
               return (
-                <div key={idx} className="w-fit text-sm">
+                <div key={`${message.id}-${idx}`} className="w-fit bg-amber-900 text-sm">
                   {part.text}
                 </div>
               );
+            case "text":
+              return (
+                <div key={`${message.id}-${idx}`} className="w-fit text-sm">
+                  {part.text}
+                </div>
+              );
+            // TODO: Maybe use the tool output to display the theme styles
+            case "data-theme-styles":
+              if (part.data.status === "complete") {
+                const themeStyles = part.data.themeStyles;
+                return (
+                  <ChatThemePreview
+                    key={`${message.id}-${idx}`}
+                    status="complete"
+                    themeStyles={themeStyles}
+                    className="p-0"
+                  >
+                    <ScrollArea className="h-48">
+                      <div className="p-2">
+                        <ColorPreview styles={themeStyles} currentMode={themeState.currentMode} />
+                      </div>
+                    </ScrollArea>
+                  </ChatThemePreview>
+                );
+              }
+
+              return <ChatThemePreview status={part.data.status} className="p-0" />;
           }
         })}
-
-        {message.metadata?.themeStyles && (
-          <ChatThemePreview themeStyles={message.metadata.themeStyles} className="p-0">
-            <ScrollArea className="h-48">
-              <div className="p-2">
-                <ColorPreview
-                  styles={message.metadata.themeStyles}
-                  currentMode={themeState.currentMode}
-                />
-              </div>
-            </ScrollArea>
-          </ChatThemePreview>
-        )}
       </div>
     </div>
   );
@@ -209,7 +225,7 @@ function UserMessage({
       {shouldDisplayMsgContent && (
         <div
           className={cn(
-            "bg-card/75 text-card-foreground/90 border-border/75! w-fit self-end rounded-lg border p-3 text-sm"
+            "bg-card/75 text-card-foreground/90 w-fit self-end rounded-lg border p-3 text-sm"
           )}
         >
           {msgContent}

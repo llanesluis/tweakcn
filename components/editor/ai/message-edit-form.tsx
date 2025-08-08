@@ -77,7 +77,7 @@ export function MessageEditForm({
   const { isUserDragging } = useDocumentDragAndDropIntent();
 
   return (
-    <div className="bg-card/75 text-card-foreground/90 border-border/75! relative isolate flex size-full flex-col gap-2 self-end rounded-lg border p-2">
+    <div className="bg-card/75 text-card-foreground/90 relative isolate flex size-full flex-col gap-2 self-end rounded-lg border border-dashed p-2">
       {isUserDragging && (
         <div className={cn("flex h-16 items-center rounded-lg")}>
           <DragAndDropImageUploader
