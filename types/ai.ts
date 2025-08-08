@@ -10,7 +10,6 @@ export type MentionReference = {
   };
 };
 
-// TODO: Rethink types
 export type PromptImage = {
   url: string;
 };
@@ -21,10 +20,24 @@ export type AIPromptData = {
   images?: PromptImage[];
 };
 
-export type MessageMetadata = {
+export type MyMetadata = {
   promptData?: AIPromptData;
   themeStyles?: ThemeStyles;
   isError?: boolean;
 };
 
-export type ChatMessage = UIMessage<MessageMetadata>;
+export type ThemeStylesStreamData =
+  | {
+      status: "processing" | "streaming";
+      themeStyles?: ThemeStyles;
+    }
+  | {
+      status: "complete";
+      themeStyles: ThemeStyles;
+    };
+
+export type MyDataParts = {
+  "theme-styles": ThemeStylesStreamData;
+};
+
+export type ChatMessage = UIMessage<MyMetadata, MyDataParts>;

@@ -60,7 +60,7 @@ export const themeStylePropsSchema = z.object({
   "shadow-offset-x": z.string(),
   "shadow-offset-y": z.string(),
   "letter-spacing": z.string().describe("The global letter spacing for text."),
-  spacing: z.string(),
+  spacing: z.string().optional(),
 });
 
 export const themeStylesSchema = z.object({
@@ -70,6 +70,17 @@ export const themeStylesSchema = z.object({
 
 export type ThemeStyleProps = z.infer<typeof themeStylePropsSchema>;
 export type ThemeStyles = z.infer<typeof themeStylesSchema>;
+
+export const themeStylePropsSchemaWithoutSpacing = themeStylePropsSchema.omit({
+  spacing: true,
+});
+
+export const themeStylesSchemaWithoutSpacing = z.object({
+  light: themeStylePropsSchemaWithoutSpacing,
+  dark: themeStylePropsSchemaWithoutSpacing,
+});
+
+export type ThemeStylePropsWithoutSpacing = z.infer<typeof themeStylesSchemaWithoutSpacing>;
 
 export interface ThemeEditorPreviewProps {
   styles: ThemeStyles;

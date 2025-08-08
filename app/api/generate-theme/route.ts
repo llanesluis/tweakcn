@@ -9,15 +9,22 @@ import { convertMessagesToModelMessages } from "@/utils/ai/message-converter";
 import { createGoogleGenerativeAI, GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
-import { smoothStream, streamText } from "ai";
+import {
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  smoothStream,
+  stepCountIs,
+  streamText,
+} from "ai";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
+import { TOOLS } from "./tools";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
-const model = google("gemini-2.5-flash");
+const model = google("gemini-2.5-pro");
 
 const ratelimit = new Ratelimit({
   redis: kv,
@@ -56,36 +63,68 @@ export async function POST(req: NextRequest) {
     const { messages }: { messages: ChatMessage[] } = await req.json();
     const modelMessages = await convertMessagesToModelMessages(messages);
 
-    const stream = streamText({
-      model,
-      system: SYSTEM_PROMPT,
-      messages: modelMessages,
-      providerOptions: {
-        google: {
-          thinkingConfig: {
-            thinkingBudget: 128,
+    const stream = createUIMessageStream<ChatMessage>({
+      execute: ({ writer }) => {
+        const generateTheme = TOOLS.generateTheme(
+          {
+            model,
+            messages: modelMessages,
           },
-        } satisfies GoogleGenerativeAIProviderOptions,
-      },
-      experimental_transform: smoothStream({
-        delayInMs: 20,
-        chunking: "word",
-      }),
-    });
+          writer
+        );
 
-    // Record usage once the result finishes streaming
-    stream.usage.then(async (usage) => {
-      try {
-        await recordAIUsage({
-          promptTokens: usage.inputTokens,
-          completionTokens: usage.outputTokens,
+        const result = streamText({
+          model,
+          system: SYSTEM_PROMPT,
+          messages: modelMessages,
+          providerOptions: {
+            google: {
+              thinkingConfig: {
+                thinkingBudget: 128,
+                includeThoughts: true,
+              },
+            } satisfies GoogleGenerativeAIProviderOptions,
+          },
+          tools: { generateTheme },
+          stopWhen: stepCountIs(5),
+          onError: (error) => {
+            if (error instanceof Error) {
+              console.log("tool-error:", error);
+            }
+          },
+          onFinish: async (result) => {
+            const { usage } = result;
+            try {
+              await recordAIUsage({
+                promptTokens: usage.inputTokens,
+                completionTokens: usage.outputTokens,
+              });
+            } catch (error) {
+              logError(error as Error, { action: "recordAIUsage", usage });
+            }
+          },
+          experimental_transform: smoothStream({
+            delayInMs: 20,
+            chunking: "word",
+          }),
         });
-      } catch (error) {
-        logError(error as Error, { action: "recordAIUsage", usage });
-      }
+
+        writer.merge(
+          result.toUIMessageStream({
+            messageMetadata: ({ part }) => {
+              if (part.type === "tool-result") {
+                // Attach the theme styles to the assistant message metadata
+                if (part.toolName === "generateTheme") {
+                  return { themeStyles: part.output };
+                }
+              }
+            },
+          })
+        );
+      },
     });
 
-    return stream.toUIMessageStreamResponse();
+    return createUIMessageStreamResponse({ stream });
   } catch (error) {
     if (
       error instanceof Error &&
