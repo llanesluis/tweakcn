@@ -78,6 +78,14 @@ export function MessageActions({
       )}
 
       <CopyButton textToCopy={getCopyContent()} className="size-7 [&>svg]:size-3.5" />
+
+      <DebugButton
+        className="size-7 [&>svg]:size-3.5"
+        onClick={() => {
+          console.log("----- 🐛 Debugging Message -----");
+          console.dir(message, { depth: null });
+        }}
+      />
     </div>
   );
 }
