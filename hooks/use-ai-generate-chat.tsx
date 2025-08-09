@@ -68,7 +68,8 @@ export function AIGenerateChatProvider({ children }: { children: React.ReactNode
       queryClient.invalidateQueries({ queryKey: [SUBSCRIPTION_STATUS_QUERY_KEY] });
 
       // TODO: Apply the theme to the editor when the assistant has the themeStyles attached to the metadata?
-      if (message.metadata?.themeStyles) {
+      const themeStyles = message.metadata?.themeStyles;
+      if (themeStyles) {
       }
     },
   });
@@ -84,12 +85,22 @@ export function AIGenerateChatProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (!hasInitializedRef.current) return;
-    setStoredMessages(chat.messages);
-  }, [chat.messages]);
+
+    // Only update the stored messages when the chat is not currently processing a request
+    if (chat.status === "ready" || chat.status === "error") {
+      console.log("----- ✅ Updating Stored Messages -----");
+      setStoredMessages(chat.messages);
+    }
+  }, [chat.status, chat.messages]);
 
   useEffect(() => {
     if (!hasStoreHydrated || hasInitializedRef.current) return;
-    chat.setMessages(storedMessages);
+
+    if (storedMessages.length > 0) {
+      console.log("----- ☑️ Populating Chat with Stored Messages -----");
+      chat.setMessages(storedMessages);
+    }
+
     hasInitializedRef.current = true;
   }, [hasStoreHydrated, storedMessages]);
 
