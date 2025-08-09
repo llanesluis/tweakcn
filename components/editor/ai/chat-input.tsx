@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader } from "@/components/prompt-kit/loader";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { useAIChatForm } from "@/hooks/use-ai-chat-form";
@@ -9,9 +10,9 @@ import { usePostLoginAction } from "@/hooks/use-post-login-action";
 import { MAX_IMAGE_FILES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { AIPromptData } from "@/types/ai";
-import { ArrowUp, Loader, Plus, StopCircle } from "lucide-react";
+import { ArrowUp, Loader as LoaderIcon, Plus, StopCircle } from "lucide-react";
 import { AIChatFormBody } from "./ai-chat-form-body";
-import { AlertBanner } from "./alert-banner";
+import { AlertBanner, BannerWrapper } from "./alert-banner";
 import { ImageUploader } from "./image-uploader";
 
 type ThemeGenerationPayload = {
@@ -96,6 +97,13 @@ export function ChatInput({
 
   return (
     <div className="relative transition-all contain-layout">
+      <BannerWrapper show={isGeneratingTheme}>
+        <div className="flex size-full items-center gap-1.5">
+          <LoaderIcon className="size-2.5 animate-spin" />
+          <Loader variant="text-shimmer" text="Generating..." size="sm" />
+        </div>
+      </BannerWrapper>
+
       <AlertBanner />
       <div className="bg-background relative isolate z-10 flex size-full min-h-[100px] flex-1 flex-col gap-2 overflow-hidden rounded-lg border p-2 shadow-xs">
         <AIChatFormBody
@@ -155,7 +163,7 @@ export function ChatInput({
                   onClick={handleGenerateSubmit}
                   disabled={isEmptyPrompt || isSomeImageUploading || isGeneratingTheme}
                 >
-                  {isGeneratingTheme ? <Loader className="animate-spin" /> : <ArrowUp />}
+                  {isGeneratingTheme ? <LoaderIcon className="animate-spin" /> : <ArrowUp />}
                 </Button>
               </TooltipWrapper>
             )}
