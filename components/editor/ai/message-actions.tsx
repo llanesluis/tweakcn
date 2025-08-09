@@ -1,4 +1,5 @@
 import { CopyButton } from "@/components/copy-button";
+import { DebugButton } from "@/components/debug-button";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,10 +25,20 @@ export function MessageActions({
   const isAssistant = message.role === "assistant";
 
   const getCopyContent = () => {
+    const convertTextPartsToString = (message: ChatMessage) => {
+      return (
+        message.parts
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
+          .join("\n") ?? ""
+      );
+    };
+
     if (isUser && message.metadata) {
-      return message.metadata.promptData?.content ?? "";
+      return message.metadata.promptData?.content ?? convertTextPartsToString(message);
     }
-    return message.parts?.map((part) => (part.type === "text" ? part.text : "")).join("") ?? "";
+
+    return convertTextPartsToString(message);
   };
 
   return (

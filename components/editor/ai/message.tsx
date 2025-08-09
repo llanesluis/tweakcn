@@ -36,6 +36,8 @@ export default function Message({
   const isUser = message.role === "user";
   const isAssistant = message.role === "assistant";
 
+  const showMessageActions = !isLastMessageStreaming;
+
   return (
     <div className={cn("flex w-full items-start gap-4", isUser ? "justify-end" : "justify-start")}>
       <div className={cn("flex w-full max-w-[90%] items-start")}>
@@ -56,7 +58,7 @@ export default function Message({
             <AssistantMessage message={message} isLastMessageStreaming={isLastMessageStreaming} />
           )}
 
-          {!isLastMessageStreaming && (
+          {showMessageActions && (
             <MessageActions
               message={message}
               onRetry={onRetry}
@@ -105,40 +107,37 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
 
       <div className="relative flex flex-col gap-3">
         {message.parts.map((part, idx) => {
-          switch (part.type) {
-            case "reasoning":
-              return (
-                <div key={`${message.id}-${idx}`} className="w-fit bg-amber-900 text-sm">
-                  {part.text}
-                </div>
-              );
-            case "text":
-              return (
-                <div key={`${message.id}-${idx}`} className="w-fit text-sm">
-                  {part.text}
-                </div>
-              );
-            // TODO: Maybe use the tool output to display the theme styles
-            case "data-theme-styles":
-              if (part.data.status === "complete") {
-                const themeStyles = part.data.themeStyles;
-                return (
-                  <ChatThemePreview
-                    key={`${message.id}-${idx}`}
-                    status="complete"
-                    themeStyles={themeStyles}
-                    className="p-0"
-                  >
-                    <ScrollArea className="h-48">
-                      <div className="p-2">
-                        <ColorPreview styles={themeStyles} currentMode={themeState.currentMode} />
-                      </div>
-                    </ScrollArea>
-                  </ChatThemePreview>
-                );
-              }
+          const { type } = part;
+          const key = `${message.id}-${idx}`;
 
-              return <ChatThemePreview status={part.data.status} className="p-0" />;
+          if (type === "text") {
+            return (
+              <div key={key} className="w-fit text-sm">
+                {part.text}
+              </div>
+            );
+          }
+
+          if (type === "data-theme-styles") {
+            // TODO: Maybe use the tool output to display the theme styles
+            if (part.data.status === "complete") {
+              const themeStyles = part.data.themeStyles;
+              return (
+                <ChatThemePreview
+                  key={key}
+                  status="complete"
+                  themeStyles={themeStyles}
+                  className="p-0"
+                >
+                  <ScrollArea className="h-48">
+                    <div className="p-2">
+                      <ColorPreview styles={themeStyles} currentMode={themeState.currentMode} />
+                    </div>
+                  </ScrollArea>
+                </ChatThemePreview>
+              );
+            }
+            return <ChatThemePreview key={key} status={part.data.status} className="p-0" />;
           }
         })}
       </div>

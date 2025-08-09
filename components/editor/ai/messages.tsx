@@ -5,7 +5,8 @@ import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
 import { useFeedbackText } from "@/hooks/use-feedback-text";
 import { cn } from "@/lib/utils";
 import { AIPromptData, type ChatMessage } from "@/types/ai";
-import { useEffect, useRef, useState } from "react";
+import { filterMessagesToDisplay, getLastAssistantMessage } from "@/utils/ai/messages";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LoadingLogo } from "./loading-logo";
 import Message from "./message";
 
@@ -33,13 +34,6 @@ export function Messages({
   const previousUserMsgLength = useRef<number>(
     messages.filter((message) => message.role === "user").length
   );
-
-  const isProcessing = status === "submitted";
-  const feedbackText = useFeedbackText({
-    showFeedbackText: isProcessing,
-    feedbackMessages: FEEDBACK_MESSAGES,
-    rotationIntervalInSeconds: 8,
-  });
 
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -78,6 +72,25 @@ export function Messages({
     return () => startMessagesObserver.disconnect();
   }, []);
 
+  const visibleMessages = useMemo(() => filterMessagesToDisplay(messages), [messages]);
+
+  const showLoadingMessage = useMemo(() => {
+    const isSubmitted = status === "submitted";
+    const isStreaming = status === "streaming";
+    const isError = status === "error";
+    const lastAssistantMsgHasText = getLastAssistantMessage(messages)?.parts.some(
+      (part) => part.type === "text" && Boolean(part.text)
+    );
+
+    return !isError && (isSubmitted || (isStreaming && !lastAssistantMsgHasText));
+  }, [status, messages]);
+
+  const feedbackText = useFeedbackText({
+    showFeedbackText: showLoadingMessage,
+    feedbackMessages: FEEDBACK_MESSAGES,
+    rotationIntervalInSeconds: 10,
+  });
+
   return (
     <div className="relative size-full">
       {/* Top fade out effect when scrolling */}
@@ -91,7 +104,7 @@ export function Messages({
         <ChatContainerContent className="flex-1">
           <div ref={messagesStartRef} />
           <div className="flex flex-col gap-8 px-4 pt-2 pb-8 wrap-anywhere whitespace-pre-wrap">
-            {messages.map((message, index) => {
+            {visibleMessages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreaming = status === "submitted" || status === "streaming";
               const isLastMessageStreaming =
@@ -112,7 +125,7 @@ export function Messages({
             })}
 
             {/* Loading message when AI is generating */}
-            {isProcessing && (
+            {showLoadingMessage && (
               <div className="flex items-center gap-1.5">
                 <div className="relative flex size-6 items-center justify-center">
                   <LoadingLogo />
@@ -125,10 +138,10 @@ export function Messages({
           <div ref={messagesEndRef} />
         </ChatContainerContent>
 
-        <div className="absolute inset-x-0 bottom-2 z-20 flex justify-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center">
           <ScrollButton
             variant="outline"
-            className="ring-primary/50 size-7 rounded-full shadow-none ring-2"
+            className="ring-primary/50 pointer-events-auto z-20 size-7 rounded-full shadow-none ring-2"
           />
         </div>
       </ChatContainerRoot>
@@ -136,4 +149,4 @@ export function Messages({
   );
 }
 
-const FEEDBACK_MESSAGES = ["Processing...", "Working on your theme...", "Almost there..."];
+const FEEDBACK_MESSAGES = ["Loading...", "Processing your request...", "Just a moment..."];
