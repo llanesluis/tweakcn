@@ -6,7 +6,7 @@ import { ChatMessage } from "@/types/ai";
 import { SubscriptionRequiredError } from "@/types/errors";
 import { SYSTEM_PROMPT } from "@/utils/ai/generate-theme";
 import { convertMessagesToModelMessages } from "@/utils/ai/message-converter";
-import { createGoogleGenerativeAI, GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
+import { baseModel, baseProviderOptions } from "@/utils/ai/model";
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
 import {
@@ -19,12 +19,6 @@ import {
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 import { TOOLS } from "./tools";
-
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_API_KEY,
-});
-
-const model = google("gemini-2.5-pro");
 
 const ratelimit = new Ratelimit({
   redis: kv,
@@ -65,42 +59,27 @@ export async function POST(req: NextRequest) {
 
     const stream = createUIMessageStream<ChatMessage>({
       execute: ({ writer }) => {
-        const generateTheme = TOOLS.generateTheme(
-          {
-            model,
-            messages: modelMessages,
-          },
-          writer
-        );
+        const generateTheme = TOOLS.generateTheme({ messages: modelMessages }, writer);
 
         const result = streamText({
-          model,
+          model: baseModel,
+          providerOptions: baseProviderOptions,
           system: SYSTEM_PROMPT,
           messages: modelMessages,
-          providerOptions: {
-            google: {
-              thinkingConfig: {
-                thinkingBudget: 128,
-                includeThoughts: true,
-              },
-            } satisfies GoogleGenerativeAIProviderOptions,
-          },
           tools: { generateTheme },
           stopWhen: stepCountIs(5),
           onError: (error) => {
-            if (error instanceof Error) {
-              console.log("tool-error:", error);
-            }
+            if (error instanceof Error) console.error(error);
           },
           onFinish: async (result) => {
-            const { usage } = result;
+            const { totalUsage } = result;
             try {
               await recordAIUsage({
-                promptTokens: usage.inputTokens,
-                completionTokens: usage.outputTokens,
+                promptTokens: totalUsage.inputTokens,
+                completionTokens: totalUsage.outputTokens,
               });
             } catch (error) {
-              logError(error as Error, { action: "recordAIUsage", usage });
+              logError(error as Error, { action: "recordAIUsage", totalUsage });
             }
           },
           experimental_transform: smoothStream({
@@ -111,6 +90,7 @@ export async function POST(req: NextRequest) {
 
         writer.merge(
           result.toUIMessageStream({
+            sendReasoning: true,
             messageMetadata: ({ part }) => {
               if (part.type === "tool-result") {
                 // Attach the theme styles to the assistant message metadata

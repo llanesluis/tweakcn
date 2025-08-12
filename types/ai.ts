@@ -28,8 +28,12 @@ export type MyMetadata = {
 
 export type ThemeStylesStreamData =
   | {
-      status: "processing" | "streaming";
-      themeStyles?: ThemeStyles;
+      status: "processing";
+      themeStyles?: Partial<ThemeStyles>;
+    }
+  | {
+      status: "streaming";
+      themeStyles: Partial<ThemeStyles>;
     }
   | {
       status: "complete";
