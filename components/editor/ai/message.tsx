@@ -1,10 +1,9 @@
 import Logo from "@/assets/logo.svg";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/store/editor-store";
 import { AIPromptData, type ChatMessage } from "@/types/ai";
 import { buildAIPromptRender } from "@/utils/ai/ai-prompt";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
 import ColorPreview from "../theme-preview/color-preview";
 import { ChatImagePreview } from "./chat-image-preview";
 import { ChatThemePreview } from "./chat-theme-preview";
@@ -108,7 +107,7 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
       <div className="relative flex flex-col gap-3">
         {message.parts.map((part, idx) => {
           const { type } = part;
-          const key = `${message.id}-${idx}`;
+          const key = `message-${message.id}-part-${idx}`;
 
           if (type === "text") {
             return (
@@ -119,7 +118,6 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
           }
 
           if (type === "data-theme-styles") {
-            // TODO: Maybe use the tool output to display the theme styles
             if (part.data.status === "complete") {
               const themeStyles = part.data.themeStyles;
               return (
@@ -137,6 +135,7 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
                 </ChatThemePreview>
               );
             }
+
             return <ChatThemePreview key={key} status={part.data.status} className="p-0" />;
           }
         })}

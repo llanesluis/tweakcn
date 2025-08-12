@@ -126,7 +126,7 @@ export function Messages({
 
             {/* Loading message when AI is generating */}
             {showLoadingMessage && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-start gap-1.5">
                 <div className="relative flex size-6 items-center justify-center">
                   <LoadingLogo />
                 </div>

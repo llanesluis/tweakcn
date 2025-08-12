@@ -9,11 +9,19 @@ import { applyGeneratedTheme } from "@/utils/ai/apply-theme";
 import { CheckCheck, ChevronsUpDown, Loader2, Zap } from "lucide-react";
 import { ComponentProps, useState } from "react";
 
-type ChatThemePreviewProps = ComponentProps<"div"> & {
-  status: "processing" | "streaming" | "complete";
-  expanded?: boolean;
-  themeStyles?: ThemeStyles;
-};
+type ChatThemePreviewProps = ComponentProps<"div"> & ChatThemePreviewPropsBase;
+
+type ChatThemePreviewPropsBase =
+  | {
+      status: "processing" | "streaming";
+      expanded?: boolean;
+      themeStyles?: Partial<ThemeStyles>;
+    }
+  | {
+      status: "complete";
+      expanded?: boolean;
+      themeStyles: ThemeStyles;
+    };
 
 export function ChatThemePreview({
   status,
@@ -50,10 +58,10 @@ export function ChatThemePreview({
   const handleApplyTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (themeStyles) applyGeneratedTheme(themeStyles);
+    if (status === "complete") applyGeneratedTheme(themeStyles);
   };
 
-  if (themeStyles && status === "complete")
+  if (status === "complete")
     return (
       <Card className={cn("max-w-[550px] overflow-hidden rounded-lg shadow-none")}>
         <div
@@ -94,7 +102,7 @@ export function ChatThemePreview({
             />
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1">
             <Button
               variant="ghost"
               className="h-7 gap-1.5 px-2 shadow-none"
