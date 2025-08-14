@@ -47,9 +47,13 @@ export const themeStylePropsSchema = z.object({
   "sidebar-accent-foreground": z.string().describe("Paired with `sidebar-accent`."),
   "sidebar-border": z.string().describe("The color for borders within the sidebar."),
   "sidebar-ring": z.string().describe("The color for focus rings within the sidebar."),
-  "font-sans": z.string().describe("The preferred sans-serif font family."),
+  "font-sans": z
+    .string()
+    .describe(
+      "Primary UI font. May be serif, sans, monospace, or display depending on the theme vibe."
+    ),
   "font-serif": z.string().describe("The preferred serif font family."),
-  "font-mono": z.string().describe("The preferred monospace font family."),
+  "font-mono": z.string().describe("The preferred monospace font family. Used for code blocks."),
   radius: z
     .string()
     .describe("The global border-radius for components. Use 0rem for sharp corners."),
