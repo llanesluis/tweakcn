@@ -1,3 +1,4 @@
+import { ThemeGenerationUITools } from "@/app/api/generate-theme/tools";
 import { UIMessage } from "ai";
 import { type ThemeStyleProps, type ThemeStyles } from "./theme";
 
@@ -25,22 +26,6 @@ export type MyMetadata = {
   themeStyles?: ThemeStyles;
 };
 
-export type ThemeStylesStreamData =
-  | {
-      status: "processing";
-      themeStyles?: Partial<ThemeStyles>;
-    }
-  | {
-      status: "streaming";
-      themeStyles: Partial<ThemeStyles>;
-    }
-  | {
-      status: "complete";
-      themeStyles: ThemeStyles;
-    };
+type MyUITools = ThemeGenerationUITools;
 
-export type MyDataParts = {
-  "theme-styles": ThemeStylesStreamData;
-};
-
-export type ChatMessage = UIMessage<MyMetadata, MyDataParts>;
+export type ChatMessage = UIMessage<MyMetadata, {}, MyUITools>;

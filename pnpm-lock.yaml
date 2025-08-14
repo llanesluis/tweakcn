@@ -16,7 +16,7 @@ importers:
         version: 2.0.10(zod@4.0.15)
       '@ai-sdk/react':
         specifier: ^2.0.5
-        version: 2.0.5(react@19.1.0)(zod@4.0.15)
+        version: 2.0.10(react@19.1.0)(zod@4.0.15)
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -168,8 +168,8 @@ importers:
         specifier: ^0.6.8
         version: 0.6.8
       ai:
-        specifier: ^5.0.10
-        version: 5.0.10(zod@4.0.15)
+        specifier: ^5.0.5
+        version: 5.0.5(zod@4.0.15)
       better-auth:
         specifier: ^1.2.7
         version: 1.2.7
@@ -391,8 +391,8 @@ packages:
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@2.0.5':
-    resolution: {integrity: sha512-rXcraxZ+cAwKWS/wbCIx9gl1Ep7DNmOXTtB/U2WPSEpez4kc+A/2dwibJqRQ9wujbRv05jsTTVLUjE92Ovzhyg==}
+  '@ai-sdk/react@2.0.10':
+    resolution: {integrity: sha512-8Wq1vtuokfal3DNIRA6ckRwoKZ1imoSUS0VUgT11eDkOm33PP3A770jGqK0NV0uKh9odyy5fpGtswI2pxMCPug==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -6256,10 +6256,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.5(react@19.1.0)(zod@4.0.15)':
+  '@ai-sdk/react@2.0.10(react@19.1.0)(zod@4.0.15)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.1(zod@4.0.15)
-      ai: 5.0.5(zod@4.0.15)
+      ai: 5.0.10(zod@4.0.15)
       react: 19.1.0
       swr: 2.3.3(react@19.1.0)
       throttleit: 2.1.0

@@ -18,7 +18,7 @@ import {
 } from "ai";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
-import { TOOLS } from "./tools";
+import { THEME_GENERATION_TOOLS } from "./tools";
 
 const ratelimit = new Ratelimit({
   redis: kv,
@@ -59,17 +59,13 @@ export async function POST(req: NextRequest) {
 
     const stream = createUIMessageStream<ChatMessage>({
       execute: ({ writer }) => {
-        const generateTheme = TOOLS.generateTheme(
-          { messages: modelMessages, abortSignal: req.signal },
-          writer
-        );
-
         const result = streamText({
+          abortSignal: req.signal,
           model: baseModel,
           providerOptions: baseProviderOptions,
           system: SYSTEM_PROMPT,
           messages: modelMessages,
-          tools: { generateTheme },
+          tools: THEME_GENERATION_TOOLS,
           stopWhen: stepCountIs(5),
           onError: (error) => {
             if (error instanceof Error) console.error(error);
@@ -91,19 +87,7 @@ export async function POST(req: NextRequest) {
           }),
         });
 
-        writer.merge(
-          result.toUIMessageStream({
-            sendReasoning: true,
-            messageMetadata: ({ part }) => {
-              if (part.type === "tool-result") {
-                // Attach the theme styles to the assistant message metadata
-                if (part.toolName === "generateTheme") {
-                  return { themeStyles: part.output };
-                }
-              }
-            },
-          })
-        );
+        writer.merge(result.toUIMessageStream({ sendReasoning: true }));
       },
     });
 

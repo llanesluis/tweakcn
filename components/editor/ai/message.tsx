@@ -109,9 +109,11 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
             );
           }
 
-          if (type === "data-theme-styles") {
-            if (part.data.status === "complete") {
-              const themeStyles = part.data.themeStyles;
+          if (type === "tool-generateTheme") {
+            const { state } = part;
+
+            if (state === "output-available") {
+              const themeStyles = part.output;
               return (
                 <ChatThemePreview
                   key={key}
@@ -128,7 +130,11 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
               );
             }
 
-            return <ChatThemePreview key={key} status={part.data.status} className="p-0" />;
+            if (state === "output-error") {
+              return <ChatThemePreview key={key} status="error" className="p-0" />;
+            }
+
+            return <ChatThemePreview key={key} status="loading" className="p-0" />;
           }
         })}
       </div>

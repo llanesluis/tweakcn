@@ -64,7 +64,7 @@
     "@upstash/ratelimit": "^2.0.5",
     "@vercel/kv": "^3.0.0",
     "@vercel/og": "^0.6.8",
-    "ai": "^5.0.10",
+    "ai": "^5.0.5",
     "better-auth": "^1.2.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

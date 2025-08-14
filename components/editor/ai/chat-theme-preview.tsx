@@ -6,15 +6,21 @@ import { useFeedbackText } from "@/hooks/use-feedback-text";
 import { cn } from "@/lib/utils";
 import { ThemeStyles } from "@/types/theme";
 import { applyGeneratedTheme } from "@/utils/ai/apply-theme";
-import { CheckCheck, ChevronsUpDown, Loader2, Zap } from "lucide-react";
+import { AlertCircle, CheckCheck, ChevronsUpDown, Loader2, Zap } from "lucide-react";
 import { ComponentProps, useState } from "react";
 
 type ChatThemePreviewProps = ComponentProps<"div"> & ChatThemePreviewPropsBase;
 
 type ChatThemePreviewPropsBase =
   | {
-      status: "processing" | "streaming";
+      status: "loading";
       expanded?: boolean;
+      themeStyles?: Partial<ThemeStyles>;
+    }
+  | {
+      status: "error";
+      expanded?: boolean;
+      errorText?: string;
       themeStyles?: Partial<ThemeStyles>;
     }
   | {
@@ -33,7 +39,7 @@ export function ChatThemePreview({
 }: ChatThemePreviewProps) {
   const [isExpanded, setIsExpanded] = useState(expanded);
   const { theme: mode } = useTheme();
-  const loading = status === "processing" || status === "streaming";
+  const loading = status === "loading";
 
   const feedbackText = useFeedbackText({
     showFeedbackText: loading,
@@ -54,6 +60,18 @@ export function ChatThemePreview({
       </Card>
     );
   }
+
+  if (status === "error")
+    return (
+      <Card className={cn("max-w-[550px] overflow-hidden rounded-lg shadow-none")}>
+        <div className="flex size-full h-10 items-center gap-2 p-1.5">
+          <div className="bg-destructive flex size-7 items-center justify-center rounded-sm">
+            <AlertCircle className="text-destructive-foreground size-4" />
+          </div>
+          <span className="text-foreground/90 text-sm">Generation cancelled or failed.</span>
+        </div>
+      </Card>
+    );
 
   const handleApplyTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
