@@ -4,7 +4,8 @@ import { SUBSCRIPTION_STATUS_QUERY_KEY } from "@/hooks/use-subscription";
 import { toast } from "@/hooks/use-toast";
 import { useAIChatStore } from "@/store/ai-chat-store";
 import { ChatMessage } from "@/types/ai";
-import { ApiError } from "@/types/errors";
+
+import { parseAiSdkTransportError } from "@/utils/ai/parse-ai-sdk-transport-error";
 import { useChat } from "@ai-sdk/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport } from "ai";
@@ -32,44 +33,23 @@ export function AIGenerateChatProvider({ children }: { children: React.ReactNode
     transport: new DefaultChatTransport({
       api: "/api/generate-theme",
     }),
-    // TODO: Check if this way of handling errors is correct
     onError: (error) => {
-      let message = "Failed to generate theme. Please try again.";
+      const defaultMessage = "Failed to generate theme. Please try again.";
+      const normalizedError = parseAiSdkTransportError(error, defaultMessage);
 
-      if (error instanceof Error && error.name === "AbortError") {
-        message = "The theme generation was cancelled, no changes were made.";
-        toast({
-          title: "Theme generation cancelled",
-          description: message,
-        });
-      } else if (error instanceof ApiError) {
-        if (error.code === "SUBSCRIPTION_REQUIRED") {
-          toast({
-            title: "Subscription required",
-            description: error.message,
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      } else {
-        const description = error instanceof Error ? error.message : message;
-        toast({
-          title: "Error",
-          description,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "An error occurred",
+        description: normalizedError.message,
+        variant: "destructive",
+      });
     },
     onFinish: ({ message }) => {
       queryClient.invalidateQueries({ queryKey: [SUBSCRIPTION_STATUS_QUERY_KEY] });
 
-      // TODO: Apply the theme to the editor when the assistant has the themeStyles attached to the metadata?
+      // TBD: Apply the theme to the editor when the assistant has the themeStyles attached to the metadata?
       const themeStyles = message.metadata?.themeStyles;
       if (themeStyles) {
+        // applyGeneratedTheme(themeStyles);
       }
     },
   });

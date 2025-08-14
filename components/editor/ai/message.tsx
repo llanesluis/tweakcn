@@ -87,20 +87,12 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
           <LoadingLogo />
         </div>
       ) : (
-        // TODO: When the message was stopped, should display correcly in the UI
-        // with metadata is not the way...
         <div
           className={cn(
-            "border-border/50! bg-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full border select-none",
-            message.metadata?.isError && "bg-destructive"
+            "border-border/50! bg-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full border select-none"
           )}
         >
-          <Logo
-            className={cn(
-              "text-background size-full p-0.5",
-              message.metadata?.isError && "text-destructive-foreground"
-            )}
-          />
+          <Logo className={cn("text-background size-full p-0.5")} />
         </div>
       )}
 

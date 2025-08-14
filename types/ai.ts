@@ -23,7 +23,6 @@ export type AIPromptData = {
 export type MyMetadata = {
   promptData?: AIPromptData;
   themeStyles?: ThemeStyles;
-  isError?: boolean;
 };
 
 export type ThemeStylesStreamData =

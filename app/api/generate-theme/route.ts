@@ -59,7 +59,10 @@ export async function POST(req: NextRequest) {
 
     const stream = createUIMessageStream<ChatMessage>({
       execute: ({ writer }) => {
-        const generateTheme = TOOLS.generateTheme({ messages: modelMessages }, writer);
+        const generateTheme = TOOLS.generateTheme(
+          { messages: modelMessages, abortSignal: req.signal },
+          writer
+        );
 
         const result = streamText({
           model: baseModel,

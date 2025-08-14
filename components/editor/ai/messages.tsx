@@ -1,11 +1,16 @@
+import Logo from "@/assets/logo.svg";
 import { ChatContainerContent, ChatContainerRoot } from "@/components/prompt-kit/chat-container";
 import { Loader } from "@/components/prompt-kit/loader";
 import { ScrollButton } from "@/components/prompt-kit/scroll-button";
+import { TooltipWrapper } from "@/components/tooltip-wrapper";
+import { Button } from "@/components/ui/button";
 import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
 import { useFeedbackText } from "@/hooks/use-feedback-text";
 import { cn } from "@/lib/utils";
 import { AIPromptData, type ChatMessage } from "@/types/ai";
 import { filterMessagesToDisplay, getLastAssistantMessage } from "@/utils/ai/messages";
+import { parseAiSdkTransportError } from "@/utils/ai/parse-ai-sdk-transport-error";
+import { X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LoadingLogo } from "./loading-logo";
 import Message from "./message";
@@ -29,7 +34,7 @@ export function Messages({
   editingMessageIndex,
   isGeneratingTheme,
 }: ChatMessagesProps) {
-  const { status } = useAIGenerateChatContext();
+  const { status, error, clearError } = useAIGenerateChatContext();
   const [isScrollTop, setIsScrollTop] = useState(true);
   const previousUserMsgLength = useRef<number>(
     messages.filter((message) => message.role === "user").length
@@ -91,6 +96,13 @@ export function Messages({
     rotationIntervalInSeconds: 10,
   });
 
+  const errorText = useMemo(() => {
+    if (!error) return undefined;
+    const defaultMessage = "Failed to generate theme. Please try again.";
+    const normalized = parseAiSdkTransportError(error, defaultMessage);
+    return normalized.message ?? defaultMessage;
+  }, [error]);
+
   return (
     <div className="relative size-full">
       {/* Top fade out effect when scrolling */}
@@ -132,6 +144,38 @@ export function Messages({
                 </div>
 
                 <Loader variant="text-shimmer" text={feedbackText} size="md" />
+              </div>
+            )}
+
+            {/* Error message when generating theme fails */}
+            {status === "error" && error && (
+              <div className="flex items-start gap-1.5">
+                <div
+                  className={cn(
+                    "border-border/50! bg-destructive relative flex size-6 shrink-0 items-center justify-center rounded-full border select-none"
+                  )}
+                >
+                  <Logo className={cn("text-destructive-foreground size-full p-0.5")} />
+                </div>
+
+                <div
+                  className={cn(
+                    "bg-destructive/50 text-foreground group/error-banner relative flex w-full gap-2 rounded-lg p-3"
+                  )}
+                >
+                  <span className="text-sm">{errorText}</span>
+
+                  <TooltipWrapper label="Clear error" asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="invisible ml-auto size-4 group-hover/error-banner:visible [&>svg]:size-3"
+                      onClick={clearError}
+                    >
+                      <X />
+                    </Button>
+                  </TooltipWrapper>
+                </div>
               </div>
             )}
           </div>

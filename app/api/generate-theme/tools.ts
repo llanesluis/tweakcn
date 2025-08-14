@@ -9,6 +9,7 @@ export const TOOLS = {
   generateTheme: (
     _ctx: {
       messages: ModelMessage[];
+      abortSignal: AbortSignal;
     },
     writer: UIMessageStreamWriter<ChatMessage>
   ) =>
@@ -31,6 +32,7 @@ export const TOOLS = {
           schema: themeStylesOutputSchema,
           messages: _ctx.messages,
           providerOptions: baseProviderOptions,
+          abortSignal: _ctx.abortSignal,
         });
 
         let theme = {};
