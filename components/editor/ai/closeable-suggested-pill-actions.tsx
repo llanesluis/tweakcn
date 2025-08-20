@@ -27,9 +27,6 @@ export function ClosableSuggestedPillActions({
 
   return (
     <div className="relative flex flex-col items-center justify-center">
-      {/* Fade out effect when scrolling */}
-      <div className="via-background/50 from-background pointer-events-none absolute -top-6 right-0 left-0 z-20 h-6 bg-gradient-to-t to-transparent opacity-100 transition-opacity ease-out" />
-
       <div className="text-muted-foreground flex w-full items-center justify-between gap-4">
         <h3 className="text-xs">Suggestions</h3>
         <Button

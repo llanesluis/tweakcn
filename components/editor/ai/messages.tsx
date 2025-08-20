@@ -1,17 +1,24 @@
 import Logo from "@/assets/logo.svg";
-import { ChatContainerContent, ChatContainerRoot } from "@/components/prompt-kit/chat-container";
-import { Loader } from "@/components/prompt-kit/loader";
-import { ScrollButton } from "@/components/prompt-kit/scroll-button";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Loader } from "@/components/loader";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { useChatContext } from "@/hooks/use-chat-context";
-import { useFeedbackText } from "@/hooks/use-feedback-text";
+import { useScrollStartEnd } from "@/hooks/use-scroll-start-end";
 import { cn } from "@/lib/utils";
 import { AIPromptData, type ChatMessage } from "@/types/ai";
-import { filterMessagesToDisplay, getLastAssistantMessage } from "@/utils/ai/messages";
+import {
+  filterMessagesToDisplay,
+  getLastAssistantMessage,
+  getUserMessages,
+} from "@/utils/ai/messages";
 import { parseAiSdkTransportError } from "@/utils/ai/parse-ai-sdk-transport-error";
 import { X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { LoadingLogo } from "./loading-logo";
 import Message from "./message";
 
@@ -35,47 +42,28 @@ export function Messages({
   isGeneratingTheme,
 }: ChatMessagesProps) {
   const { status, error, clearError } = useChatContext();
-  const [isScrollTop, setIsScrollTop] = useState(true);
+  const { isScrollStart, isScrollEnd, scrollStartRef, scrollEndRef } = useScrollStartEnd();
+
   const previousUserMsgLength = useRef<number>(
     messages.filter((message) => message.role === "user").length
   );
 
-  const messagesStartRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Scroll to bottom when user submits a new message
+  // Scroll to the bottom of the conversation when a new user message is added
   useEffect(() => {
-    if (messagesEndRef.current) {
-      // When switching tabs, messages do not change, so we don't need to animate the scroll
-      const currentUserMsgCount = messages.filter((message) => message.role === "user").length;
-      const didUserMsgCountChange = previousUserMsgLength.current !== currentUserMsgCount;
+    const scrollEndElement = scrollEndRef.current;
+    if (!scrollEndElement) return;
 
-      if (didUserMsgCountChange) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        previousUserMsgLength.current = currentUserMsgCount;
-      }
-    }
-  }, [messages]);
+    const currentUserMsgCount = getUserMessages(messages).length;
+    const didUserMsgCountChange = previousUserMsgLength.current !== currentUserMsgCount;
 
-  // Toggle top fade out effect when scrolling
-  useEffect(() => {
-    const startMarker = messagesStartRef.current;
+    if (!didUserMsgCountChange && status === "streaming") return;
 
-    if (!startMarker) return;
-
-    const observerOptions = {
-      root: null, // Use viewport as root for more reliable detection
-      threshold: 0,
-    };
-
-    const startMessagesObserver = new IntersectionObserver(([entry]) => {
-      setIsScrollTop(entry.isIntersecting);
-    }, observerOptions);
-
-    startMessagesObserver.observe(startMarker);
-
-    return () => startMessagesObserver.disconnect();
-  }, []);
+    previousUserMsgLength.current = currentUserMsgCount;
+    requestAnimationFrame(() => {
+      console.log("scrolling to end");
+      scrollEndElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [messages, status]);
 
   const visibleMessages = useMemo(() => filterMessagesToDisplay(messages), [messages]);
 
@@ -90,12 +78,6 @@ export function Messages({
     return !isError && (isSubmitted || (isStreaming && !lastAssistantMsgHasText));
   }, [status, messages]);
 
-  const feedbackText = useFeedbackText({
-    showFeedbackText: showLoadingMessage,
-    feedbackMessages: FEEDBACK_MESSAGES,
-    rotationIntervalInSeconds: 10,
-  });
-
   const errorText = useMemo(() => {
     if (!error) return undefined;
     const defaultMessage = "Failed to generate theme. Please try again.";
@@ -109,13 +91,14 @@ export function Messages({
       <div
         className={cn(
           "via-background/50 from-background pointer-events-none absolute top-0 right-0 left-0 z-20 h-6 bg-gradient-to-b to-transparent opacity-100 transition-opacity ease-out",
-          isScrollTop ? "opacity-0" : "opacity-100"
+          isScrollStart ? "opacity-0" : "opacity-100"
         )}
       />
-      <ChatContainerRoot className="scrollbar-thin relative flex size-full overflow-hidden">
-        <ChatContainerContent className="flex-1">
-          <div ref={messagesStartRef} />
-          <div className="flex flex-col gap-8 px-4 pt-2 pb-8 wrap-anywhere whitespace-pre-wrap">
+
+      <Conversation className="[&>div]:scrollbar-thin relative size-full overflow-hidden">
+        <ConversationContent className="relative flex w-full flex-col p-4">
+          <div ref={scrollStartRef} />
+          <div className="flex flex-col gap-8 pb-8 wrap-anywhere whitespace-pre-wrap">
             {visibleMessages.map((message, index) => {
               const isLastMessage = index === messages.length - 1;
               const isStreaming = status === "submitted" || status === "streaming";
@@ -138,12 +121,12 @@ export function Messages({
 
             {/* Loading message when AI is generating */}
             {showLoadingMessage && (
-              <div className="flex items-start gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <div className="relative flex size-6 items-center justify-center">
                   <LoadingLogo />
                 </div>
 
-                <Loader variant="text-shimmer" text={feedbackText} size="md" />
+                <Loader variant="dots" size="sm" />
               </div>
             )}
 
@@ -179,18 +162,18 @@ export function Messages({
               </div>
             )}
           </div>
-          <div ref={messagesEndRef} />
-        </ChatContainerContent>
+          <div ref={scrollEndRef} />
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center">
-          <ScrollButton
-            variant="outline"
-            className="ring-primary/50 pointer-events-auto z-20 size-7 rounded-full shadow-none ring-2"
-          />
-        </div>
-      </ChatContainerRoot>
+      {/* Bottom fade out effect when scrolling */}
+      <div
+        className={cn(
+          "via-background/50 from-background pointer-events-none absolute right-0 bottom-0 left-0 z-20 h-6 bg-gradient-to-t to-transparent opacity-100 transition-opacity ease-out",
+          isScrollEnd ? "opacity-0" : "opacity-100"
+        )}
+      />
     </div>
   );
 }
-
-const FEEDBACK_MESSAGES = ["Loading...", "Processing your request...", "Just a moment..."];

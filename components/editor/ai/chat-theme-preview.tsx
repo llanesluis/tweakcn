@@ -1,4 +1,4 @@
-import { Loader } from "@/components/prompt-kit/loader";
+import { Loader } from "@/components/loader";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -49,7 +49,7 @@ export function ChatThemePreview({
 
   if (loading) {
     return (
-      <Card className={cn("max-w-[550px] overflow-hidden rounded-lg shadow-none")}>
+      <Card className={cn("w-full max-w-[550px] overflow-hidden rounded-lg shadow-none")}>
         <div className="flex size-full h-10 items-center gap-2 p-1.5">
           <div className="bg-muted flex size-7 items-center justify-center rounded-sm">
             <Loader2 className="text-muted-foreground size-4 animate-spin" />

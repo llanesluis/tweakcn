@@ -10,6 +10,7 @@ import { ChatThemePreview } from "./chat-theme-preview";
 import { LoadingLogo } from "./loading-logo";
 import { MessageActions } from "./message-actions";
 import { MessageEditForm } from "./message-edit-form";
+import { StreamText } from "./stream-text";
 
 type MessageProps = {
   message: ChatMessage;
@@ -40,7 +41,11 @@ export default function Message({
   return (
     <div className={cn("flex w-full items-start gap-4", isUser ? "justify-end" : "justify-start")}>
       <div className={cn("flex w-full max-w-[90%] items-start")}>
-        <div className={cn("group/message relative flex w-full flex-col gap-2")}>
+        <div
+          className={cn(
+            "group/message relative flex w-full flex-col gap-2 wrap-anywhere whitespace-pre-wrap"
+          )}
+        >
           {isUser && (
             <UserMessage
               message={message}
@@ -96,16 +101,20 @@ function AssistantMessage({ message, isLastMessageStreaming }: AssistantMessageP
         </div>
       )}
 
-      <div className="relative flex flex-col gap-3">
+      <div className="relative flex w-full flex-col gap-3">
         {message.parts.map((part, idx) => {
           const { type } = part;
           const key = `message-${message.id}-part-${idx}`;
 
           if (type === "text") {
             return (
-              <div key={key} className="w-fit text-sm">
-                {part.text}
-              </div>
+              <StreamText
+                key={key}
+                text={part.text}
+                className="w-fit text-sm"
+                animate={isLastMessageStreaming}
+                markdown
+              />
             );
           }
 

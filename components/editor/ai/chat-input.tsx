@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader } from "@/components/prompt-kit/loader";
+import { Loader } from "@/components/loader";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { useAIChatForm } from "@/hooks/use-ai-chat-form";
