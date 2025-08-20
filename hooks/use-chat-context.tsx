@@ -4,7 +4,6 @@ import { SUBSCRIPTION_STATUS_QUERY_KEY } from "@/hooks/use-subscription";
 import { toast } from "@/hooks/use-toast";
 import { useAIChatStore } from "@/store/ai-chat-store";
 import { ChatMessage } from "@/types/ai";
-import { ThemeStyles } from "@/types/theme";
 import { applyGeneratedTheme } from "@/utils/ai/apply-theme";
 
 import { parseAiSdkTransportError } from "@/utils/ai/parse-ai-sdk-transport-error";
@@ -43,13 +42,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       });
     },
     onData: (dataPart) => {
-      // NOTE: Apparently the types are not inferred correctly here
-      // `dataPart` is not in sync with the custom ChatMessage type
       const { type, data } = dataPart;
-      // TODO: Add a preference setting to disable this automatic theme application
       if (type === "data-generated-theme-styles") {
-        const themeStyles = (data as { themeStyles: ThemeStyles }).themeStyles;
-        applyGeneratedTheme(themeStyles);
+        applyGeneratedTheme(data.themeStyles);
       }
     },
     onFinish: () => {
