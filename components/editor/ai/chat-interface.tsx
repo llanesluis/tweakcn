@@ -1,6 +1,6 @@
 "use client";
 
-import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
+import { useChatContext } from "@/hooks/use-chat-context";
 import { useAIThemeGenerationCore } from "@/hooks/use-ai-theme-generation-core";
 import { useGuards } from "@/hooks/use-guards";
 import { usePostLoginAction } from "@/hooks/use-post-login-action";
@@ -24,7 +24,7 @@ const NoMessagesPlaceholder = dynamic(
 );
 
 export function ChatInterface() {
-  const { messages, regenerate, resetMessagesUpToIndex } = useAIGenerateChatContext();
+  const { messages, regenerate, resetMessagesUpToIndex } = useChatContext();
   const { isGeneratingTheme, generateThemeCore, cancelThemeGeneration } =
     useAIThemeGenerationCore();
 

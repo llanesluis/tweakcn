@@ -4,6 +4,8 @@ import { SUBSCRIPTION_STATUS_QUERY_KEY } from "@/hooks/use-subscription";
 import { toast } from "@/hooks/use-toast";
 import { useAIChatStore } from "@/store/ai-chat-store";
 import { ChatMessage } from "@/types/ai";
+import { ThemeStyles } from "@/types/theme";
+import { applyGeneratedTheme } from "@/utils/ai/apply-theme";
 
 import { parseAiSdkTransportError } from "@/utils/ai/parse-ai-sdk-transport-error";
 import { useChat } from "@ai-sdk/react";
@@ -11,25 +13,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport } from "ai";
 import { createContext, useContext, useEffect, useRef } from "react";
 
-interface AIGenerateChatContext extends ReturnType<typeof useChat<ChatMessage>> {
+interface ChatContext extends ReturnType<typeof useChat<ChatMessage>> {
   startNewChat: () => void;
   resetMessagesUpToIndex: (index: number) => void;
 }
 
-const AIGenerateChatContext = createContext<AIGenerateChatContext | null>(null);
+const ChatContext = createContext<ChatContext | null>(null);
 
-export function AIGenerateChatProvider({ children }: { children: React.ReactNode }) {
+export function ChatProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const storedMessages = useAIChatStore((s) => s.messages);
   const setStoredMessages = useAIChatStore((s) => s.setMessages);
-  const chatId = useAIChatStore((s) => s.chatId);
 
   const hasStoreHydrated = useAIChatStore((s) => s.hasHydrated);
   const hasInitializedRef = useRef(false);
 
   const chat = useChat<ChatMessage>({
-    id: chatId,
-    messages: storedMessages || [],
     transport: new DefaultChatTransport({
       api: "/api/generate-theme",
     }),
@@ -43,14 +42,18 @@ export function AIGenerateChatProvider({ children }: { children: React.ReactNode
         variant: "destructive",
       });
     },
-    onFinish: ({ message }) => {
-      queryClient.invalidateQueries({ queryKey: [SUBSCRIPTION_STATUS_QUERY_KEY] });
-
-      // TBD: Apply the theme to the editor when the assistant has the themeStyles attached to the metadata?
-      const themeStyles = message.metadata?.themeStyles;
-      if (themeStyles) {
-        // applyGeneratedTheme(themeStyles);
+    onData: (dataPart) => {
+      // NOTE: Apparently the types are not inferred correctly here
+      // `dataPart` is not in sync with the custom ChatMessage type
+      const { type, data } = dataPart;
+      // TODO: Add a preference setting to disable this automatic theme application
+      if (type === "data-generated-theme-styles") {
+        const themeStyles = (data as { themeStyles: ThemeStyles }).themeStyles;
+        applyGeneratedTheme(themeStyles);
       }
+    },
+    onFinish: () => {
+      queryClient.invalidateQueries({ queryKey: [SUBSCRIPTION_STATUS_QUERY_KEY] });
     },
   });
 
@@ -85,18 +88,16 @@ export function AIGenerateChatProvider({ children }: { children: React.ReactNode
   }, [hasStoreHydrated, storedMessages]);
 
   return (
-    <AIGenerateChatContext.Provider value={{ ...chat, startNewChat, resetMessagesUpToIndex }}>
+    <ChatContext.Provider value={{ ...chat, startNewChat, resetMessagesUpToIndex }}>
       {children}
-    </AIGenerateChatContext.Provider>
+    </ChatContext.Provider>
   );
 }
 
-export function useAIGenerateChatContext() {
-  const ctx = useContext(AIGenerateChatContext);
-
+export function useChatContext() {
+  const ctx = useContext(ChatContext);
   if (!ctx) {
-    throw new Error("useAIGenerateChatContext must be used within an AIGenerateChatProvider");
+    throw new Error("useChatContext must be used within an ChatProvider");
   }
-
   return ctx;
 }

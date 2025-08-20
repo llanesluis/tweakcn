@@ -4,7 +4,7 @@ import { Loader } from "@/components/prompt-kit/loader";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { useAIChatForm } from "@/hooks/use-ai-chat-form";
-import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
+import { useChatContext } from "@/hooks/use-chat-context";
 import { useGuards } from "@/hooks/use-guards";
 import { usePostLoginAction } from "@/hooks/use-post-login-action";
 import { MAX_IMAGE_FILES } from "@/lib/constants";
@@ -33,7 +33,7 @@ export function ChatInput({
   isGeneratingTheme,
   onCancelThemeGeneration,
 }: ChatInputProps) {
-  const { messages, startNewChat } = useAIGenerateChatContext();
+  const { messages, startNewChat } = useChatContext();
   const { checkValidSession, checkValidSubscription } = useGuards();
 
   const {

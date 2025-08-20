@@ -4,7 +4,7 @@ import { Loader } from "@/components/prompt-kit/loader";
 import { ScrollButton } from "@/components/prompt-kit/scroll-button";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
-import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
+import { useChatContext } from "@/hooks/use-chat-context";
 import { useFeedbackText } from "@/hooks/use-feedback-text";
 import { cn } from "@/lib/utils";
 import { AIPromptData, type ChatMessage } from "@/types/ai";
@@ -34,7 +34,7 @@ export function Messages({
   editingMessageIndex,
   isGeneratingTheme,
 }: ChatMessagesProps) {
-  const { status, error, clearError } = useAIGenerateChatContext();
+  const { status, error, clearError } = useChatContext();
   const [isScrollTop, setIsScrollTop] = useState(true);
   const previousUserMsgLength = useRef<number>(
     messages.filter((message) => message.role === "user").length
@@ -169,7 +169,7 @@ export function Messages({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="invisible ml-auto size-4 group-hover/error-banner:visible [&>svg]:size-3"
+                      className="invisible ml-auto size-4 shrink-0 group-hover/error-banner:visible [&>svg]:size-3"
                       onClick={clearError}
                     >
                       <X />

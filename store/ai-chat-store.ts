@@ -4,8 +4,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { idbStorage } from "./idb-storage";
 
 interface AIChatStore {
-  chatId: string;
-  setChatId: (chatId: string) => void;
   messages: ChatMessage[];
   setMessages: (messages: ChatMessage[]) => void;
 
@@ -17,10 +15,6 @@ interface AIChatStore {
 export const useAIChatStore = create<AIChatStore>()(
   persist(
     (set) => ({
-      chatId: crypto.randomUUID(),
-      setChatId: (chatId: string) => {
-        set({ chatId });
-      },
       messages: [],
       setMessages: (messages: ChatMessage[]) => {
         set({ messages });

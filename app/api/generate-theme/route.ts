@@ -12,9 +12,9 @@ import { kv } from "@vercel/kv";
 import {
   createUIMessageStream,
   createUIMessageStreamResponse,
-  smoothStream,
   stepCountIs,
   streamText,
+  UIMessageStreamWriter,
 } from "ai";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
 
     const stream = createUIMessageStream<ChatMessage>({
       execute: ({ writer }) => {
+        const context: Context = { writer };
+
         const result = streamText({
           abortSignal: req.signal,
           model: baseModel,
@@ -81,13 +83,19 @@ export async function POST(req: NextRequest) {
               logError(error as Error, { action: "recordAIUsage", totalUsage });
             }
           },
-          experimental_transform: smoothStream({
-            delayInMs: 20,
-            chunking: "word",
-          }),
+          experimental_context: context,
         });
 
-        writer.merge(result.toUIMessageStream({ sendReasoning: true }));
+        writer.merge(
+          result.toUIMessageStream({
+            messageMetadata: ({ part }) => {
+              // `toolName` is not typed for some reason, must be kept in sync with the actual tool names
+              if (part.type === "tool-result" && part.toolName === "generateTheme") {
+                return { themeStyles: part.output };
+              }
+            },
+          })
+        );
       },
     });
 
@@ -103,3 +111,5 @@ export async function POST(req: NextRequest) {
     return handleError(error, { route: "/api/generate-theme" });
   }
 }
+
+export type Context = { writer: UIMessageStreamWriter<ChatMessage> };

@@ -1,7 +1,7 @@
 "use client";
 
 import { HorizontalScrollArea } from "@/components/horizontal-scroll-area";
-import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
+import { useChatContext } from "@/hooks/use-chat-context";
 import { useAIThemeGenerationCore } from "@/hooks/use-ai-theme-generation-core";
 import { useGuards } from "@/hooks/use-guards";
 import { usePostLoginAction } from "@/hooks/use-post-login-action";
@@ -13,7 +13,7 @@ import { ChatHeading } from "./chat-heading";
 import { SuggestedPillActions } from "./suggested-pill-actions";
 
 export function AIChatHero() {
-  const { startNewChat } = useAIGenerateChatContext();
+  const { startNewChat } = useChatContext();
   const { generateThemeCore, isGeneratingTheme, cancelThemeGeneration } =
     useAIThemeGenerationCore();
   const { checkValidSession, checkValidSubscription } = useGuards();

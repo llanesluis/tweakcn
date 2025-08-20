@@ -1,5 +1,5 @@
-import { ThemeGenerationUITools } from "@/app/api/generate-theme/tools";
-import { UIMessage } from "ai";
+import { THEME_GENERATION_TOOLS } from "@/app/api/generate-theme/tools";
+import { InferUITools, UIMessage } from "ai";
 import { type ThemeStyleProps, type ThemeStyles } from "./theme";
 
 export type MentionReference = {
@@ -26,6 +26,13 @@ export type MyMetadata = {
   themeStyles?: ThemeStyles;
 };
 
-type MyUITools = ThemeGenerationUITools;
+export type MyUIDataParts = {
+  "generated-theme-styles": {
+    themeStyles: ThemeStyles;
+  };
+};
 
-export type ChatMessage = UIMessage<MyMetadata, {}, MyUITools>;
+type ThemeGenerationUITools = InferUITools<typeof THEME_GENERATION_TOOLS>;
+export type MyUITools = ThemeGenerationUITools;
+
+export type ChatMessage = UIMessage<MyMetadata, MyUIDataParts, MyUITools>;

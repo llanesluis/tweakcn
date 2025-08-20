@@ -1,10 +1,9 @@
-import { useAIGenerateChatContext } from "@/hooks/use-ai-generate-chat";
+import { useChatContext } from "@/hooks/use-chat-context";
 import { AIPromptData } from "@/types/ai";
 
 export function useAIThemeGenerationCore() {
-  const { status, sendMessage, stop } = useAIGenerateChatContext();
+  const { status, sendMessage, stop } = useChatContext();
   const isGeneratingTheme = status === "submitted" || status === "streaming";
-  const cancelThemeGeneration = stop;
 
   const generateThemeCore = async (promptData?: AIPromptData) => {
     if (!promptData) throw new Error("Failed to generate theme. Please try again.");
@@ -18,6 +17,6 @@ export function useAIThemeGenerationCore() {
   return {
     generateThemeCore,
     isGeneratingTheme,
-    cancelThemeGeneration,
+    cancelThemeGeneration: stop,
   };
 }
