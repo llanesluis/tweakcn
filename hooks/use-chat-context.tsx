@@ -53,6 +53,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   });
 
   const startNewChat = () => {
+    chat.stop();
     chat.setMessages([]);
   };
 
