@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useStreamText() {
+interface UseStreamTextProps {
+  speed?: number;
+}
+
+export function useStreamText({ speed = 5 }: UseStreamTextProps = {}) {
   const [parts, setParts] = useState<string[]>([]);
   const [stream, setStream] = useState("");
   const frame = useRef<number | null>(null);
@@ -29,7 +33,7 @@ export function useStreamText() {
   useEffect(() => {
     if (isAnimatingRef.current) return;
 
-    const typewriterSpeed = 5;
+    const typewriterSpeed = speed;
     const fullText = parts.join("");
 
     if (streamIndexRef.current >= fullText.length) {
