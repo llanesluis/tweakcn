@@ -1,18 +1,23 @@
 import { themeStylesOutputSchema } from "@/utils/ai/generate-theme";
 import { baseModel, baseProviderOptions } from "@/utils/ai/model";
-import { generateObject, tool } from "ai";
+import { streamObject, tool } from "ai";
 import z from "zod";
 import { Context } from "./route";
 
 export const THEME_GENERATION_TOOLS = {
   generateTheme: tool({
-    description: `Generate a complete shadcn/ui theme (light and dark) from the conversation context. Use this tool as soon as you've gathered sufficient input (prompt, images/SVG, or an @base theme reference). The input is the current conversation context.`,
+    description: `Generate a complete shadcn/ui theme (light and dark) from the conversation context. Use this tool as soon as you've gathered sufficient input (prompt, images/SVG, or an @base theme reference). The input is the current conversation context.
+    
+    # Rules
+    - Some tokens come with a -foreground counterpart, ensure adequate contrast for each base/foreground pair.
+    - Colors must be HEX only (#RRGGBB). Do not output rgba().
+    - Do not output CSS variables for fonts; use the font family string.`,
     inputSchema: z.object({}),
     outputSchema: themeStylesOutputSchema,
     execute: async (_input, { messages, abortSignal, toolCallId, experimental_context }) => {
       const { writer } = experimental_context as Context;
 
-      const { object: themeStyles } = await generateObject({
+      const { partialObjectStream, object } = streamObject({
         abortSignal,
         model: baseModel,
         schema: themeStylesOutputSchema,
@@ -20,10 +25,21 @@ export const THEME_GENERATION_TOOLS = {
         providerOptions: baseProviderOptions,
       });
 
+      for await (const chunk of partialObjectStream) {
+        writer.write({
+          id: toolCallId,
+          type: "data-generated-theme-styles",
+          data: { status: "streaming", themeStyles: chunk },
+          transient: true,
+        });
+      }
+
+      const themeStyles = await object;
+
       writer.write({
         id: toolCallId,
         type: "data-generated-theme-styles",
-        data: { themeStyles },
+        data: { status: "ready", themeStyles },
         transient: true,
       });
 

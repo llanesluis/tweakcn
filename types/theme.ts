@@ -84,7 +84,7 @@ export const themeStylesSchemaWithoutSpacing = z.object({
   dark: themeStylePropsSchemaWithoutSpacing,
 });
 
-export type ThemeStylePropsWithoutSpacing = z.infer<typeof themeStylesSchemaWithoutSpacing>;
+export type ThemeStylesWithoutSpacing = z.infer<typeof themeStylesSchemaWithoutSpacing>;
 
 export interface ThemeEditorPreviewProps {
   styles: ThemeStyles;

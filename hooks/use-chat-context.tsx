@@ -44,7 +44,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     onData: (dataPart) => {
       const { type, data } = dataPart;
       if (type === "data-generated-theme-styles") {
-        applyGeneratedTheme(data.themeStyles);
+        if (data.status === "ready") applyGeneratedTheme(data.themeStyles);
       }
     },
     onFinish: () => {

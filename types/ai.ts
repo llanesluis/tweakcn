@@ -1,6 +1,6 @@
 import { THEME_GENERATION_TOOLS } from "@/app/api/generate-theme/tools";
-import { InferUITools, UIMessage } from "ai";
-import { type ThemeStyleProps, type ThemeStyles } from "./theme";
+import { DeepPartial, InferUITools, UIMessage } from "ai";
+import { ThemeStylesWithoutSpacing, type ThemeStyleProps, type ThemeStyles } from "./theme";
 
 export type MentionReference = {
   id: string;
@@ -27,9 +27,15 @@ export type MyMetadata = {
 };
 
 export type MyUIDataParts = {
-  "generated-theme-styles": {
-    themeStyles: ThemeStyles;
-  };
+  "generated-theme-styles":
+    | {
+        status: "streaming";
+        themeStyles: DeepPartial<ThemeStylesWithoutSpacing>;
+      }
+    | {
+        status: "ready";
+        themeStyles: ThemeStylesWithoutSpacing;
+      };
 };
 
 type ThemeGenerationUITools = InferUITools<typeof THEME_GENERATION_TOOLS>;
