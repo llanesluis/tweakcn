@@ -6,7 +6,7 @@ import { ChatMessage } from "@/types/ai";
 import { SubscriptionRequiredError } from "@/types/errors";
 import { SYSTEM_PROMPT } from "@/utils/ai/generate-theme";
 import { convertMessagesToModelMessages } from "@/utils/ai/message-converter";
-import { baseModel, baseProviderOptions } from "@/utils/ai/model";
+import { MODELS, baseProviderOptions } from "@/utils/ai/providers";
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
 import {
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
         const result = streamText({
           abortSignal: req.signal,
-          model: baseModel,
+          model: MODELS.themeGeneration,
           providerOptions: baseProviderOptions,
           system: SYSTEM_PROMPT,
           messages: modelMessages,

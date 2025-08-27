@@ -11,7 +11,10 @@ const google = createGoogleGenerativeAI({
 //   apiKey: process.env.OPENAI_API_KEY,
 // });
 
-export const baseModel = google("gemini-2.5-pro");
+export const MODELS = {
+  basic: google("gemini-2.5-flash"),
+  themeGeneration: google("gemini-2.5-pro"),
+};
 
 export const baseProviderOptions = {
   google: {

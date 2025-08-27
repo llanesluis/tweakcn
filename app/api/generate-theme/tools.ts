@@ -1,5 +1,5 @@
 import { themeStylesOutputSchema } from "@/utils/ai/generate-theme";
-import { baseModel, baseProviderOptions } from "@/utils/ai/model";
+import { MODELS, baseProviderOptions } from "@/utils/ai/providers";
 import { streamObject, tool } from "ai";
 import z from "zod";
 import { Context } from "./route";
@@ -19,10 +19,10 @@ export const THEME_GENERATION_TOOLS = {
 
       const { partialObjectStream, object } = streamObject({
         abortSignal,
-        model: baseModel,
+        model: MODELS.themeGeneration,
+        providerOptions: baseProviderOptions,
         schema: themeStylesOutputSchema,
         messages,
-        providerOptions: baseProviderOptions,
       });
 
       for await (const chunk of partialObjectStream) {
