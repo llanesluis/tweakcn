@@ -132,7 +132,7 @@ export function Messages({
 
             {/* Error message when generating theme fails */}
             {status === "error" && error && (
-              <div className="flex items-start gap-1.5">
+              <div className="flex w-[90%] items-start gap-1.5">
                 <div
                   className={cn(
                     "border-border/50! bg-destructive relative flex size-6 shrink-0 items-center justify-center rounded-full border select-none"
@@ -146,7 +146,7 @@ export function Messages({
                     "bg-destructive/50 text-foreground group/error-banner relative flex w-full gap-2 rounded-lg p-3"
                   )}
                 >
-                  <span className="text-sm">{errorText}</span>
+                  <p className="text-xs">{errorText}</p>
 
                   <TooltipWrapper label="Clear error" asChild>
                     <Button
