@@ -1,5 +1,5 @@
 import { AIPromptData, ChatMessage } from "@/types/ai";
-import { buildMentionStringForAPI } from "@/utils/ai/ai-prompt";
+import { buildMentionStringForAPI, dedupeMentionReferences } from "@/utils/ai/ai-prompt";
 import { AssistantContent, ModelMessage, TextPart, UserContent } from "ai";
 
 export function buildUserContentPartsFromPromptData(promptData: AIPromptData): UserContent {
@@ -47,8 +47,9 @@ export function buildUserContentPartsFromPromptData(promptData: AIPromptData): U
     userContentParts.push(textPart);
   }
 
+  const uniqueMentions = dedupeMentionReferences(promptData.mentions);
   // Add each mention as a text part
-  promptData.mentions.forEach((mention) => {
+  uniqueMentions.forEach((mention) => {
     userContentParts.push({
       type: "text",
       text: buildMentionStringForAPI(mention),
