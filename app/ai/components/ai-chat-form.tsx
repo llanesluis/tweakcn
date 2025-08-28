@@ -2,10 +2,12 @@
 
 import { AIChatFormBody } from "@/components/editor/ai/ai-chat-form-body";
 import { AlertBanner } from "@/components/editor/ai/alert-banner";
+import { EnhancePromptButton } from "@/components/editor/ai/enhance-prompt-button";
 import { ImageUploader } from "@/components/editor/ai/image-uploader";
 import ThemePresetSelect from "@/components/editor/theme-preset-select";
 import { Button } from "@/components/ui/button";
 import { useAIChatForm } from "@/hooks/use-ai-chat-form";
+import { useAIEnhancePrompt } from "@/hooks/use-ai-enhance-prompt";
 import { useGuards } from "@/hooks/use-guards";
 import { MAX_IMAGE_FILES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -38,6 +40,9 @@ export function AIChatForm({
 
   const { checkValidSession, checkValidSubscription } = useGuards();
 
+  const { startEnhance, stopEnhance, enhancedPromptAsJsonContent, isEnhancingPrompt } =
+    useAIEnhancePrompt();
+
   const handleGenerate = async () => {
     if (!checkValidSession() || !checkValidSubscription()) return; // Act as an early return
 
@@ -57,6 +62,14 @@ export function AIChatForm({
     clearLocalDraft();
   };
 
+  const handleEnhancePrompt = () => {
+    if (!checkValidSession() || !checkValidSubscription()) return; // Act as an early return;
+
+    // Only send images that are not loading, and strip loading property
+    const images = uploadedImages.filter((img) => !img.loading).map(({ url }) => ({ url }));
+    startEnhance({ ...promptData, images });
+  };
+
   return (
     <div className="@container/form relative transition-all contain-layout">
       <AlertBanner />
@@ -64,7 +77,14 @@ export function AIChatForm({
       <div className="bg-background relative z-10 flex size-full min-h-[100px] flex-1 flex-col gap-2 overflow-hidden rounded-lg border p-2 shadow-xs">
         <AIChatFormBody
           isUserDragging={isUserDragging}
-          disabled={isGeneratingTheme || isInitializing}
+          disabled={isEnhancingPrompt}
+          canSubmit={
+            !isGeneratingTheme &&
+            !isEnhancingPrompt &&
+            !isEmptyPrompt &&
+            !isSomeImageUploading &&
+            !isInitializing
+          }
           uploadedImages={uploadedImages}
           handleImagesUpload={handleImagesUpload}
           handleImageRemove={handleImageRemove}
@@ -72,12 +92,13 @@ export function AIChatForm({
           handleGenerate={handleGenerate}
           initialEditorContent={editorContentDraft ?? undefined}
           textareaKey={editorContentDraft ? "with-draft" : "no-draft"}
+          externalEditorContent={isEnhancingPrompt ? enhancedPromptAsJsonContent : undefined}
         />
 
         <div className="flex items-center justify-between gap-2">
           <div className="flex w-full max-w-64 items-center gap-2 overflow-hidden">
             <ThemePresetSelect
-              disabled={isGeneratingTheme}
+              disabled={isGeneratingTheme || isEnhancingPrompt || isInitializing}
               withCycleThemes={false}
               variant="outline"
               size="sm"
@@ -86,12 +107,23 @@ export function AIChatForm({
           </div>
 
           <div className="flex items-center gap-2">
+            {promptData?.content ? (
+              <EnhancePromptButton
+                isEnhancing={isEnhancingPrompt}
+                onStart={handleEnhancePrompt}
+                onStop={stopEnhance}
+                disabled={isGeneratingTheme || isInitializing}
+              />
+            ) : null}
+
             <ImageUploader
               fileInputRef={fileInputRef}
               onImagesUpload={handleImagesUpload}
               onClick={() => fileInputRef.current?.click()}
               disabled={
                 isGeneratingTheme ||
+                isEnhancingPrompt ||
+                isInitializing ||
                 uploadedImages.some((img) => img.loading) ||
                 uploadedImages.length >= MAX_IMAGE_FILES
               }
@@ -110,10 +142,14 @@ export function AIChatForm({
             ) : (
               <Button
                 size="icon"
-                className="size-8"
+                className="size-8 shadow-none"
                 onClick={handleGenerate}
                 disabled={
-                  isEmptyPrompt || isSomeImageUploading || isGeneratingTheme || isInitializing
+                  isEmptyPrompt ||
+                  isSomeImageUploading ||
+                  isGeneratingTheme ||
+                  isEnhancingPrompt ||
+                  isInitializing
                 }
               >
                 {isGeneratingTheme ? <Loader className="animate-spin" /> : <ArrowUp />}

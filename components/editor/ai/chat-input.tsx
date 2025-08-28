@@ -4,6 +4,7 @@ import { Loader } from "@/components/loader";
 import { TooltipWrapper } from "@/components/tooltip-wrapper";
 import { Button } from "@/components/ui/button";
 import { useAIChatForm } from "@/hooks/use-ai-chat-form";
+import { useAIEnhancePrompt } from "@/hooks/use-ai-enhance-prompt";
 import { useChatContext } from "@/hooks/use-chat-context";
 import { useGuards } from "@/hooks/use-guards";
 import { usePostLoginAction } from "@/hooks/use-post-login-action";
@@ -13,6 +14,7 @@ import { AIPromptData } from "@/types/ai";
 import { ArrowUp, Loader as LoaderIcon, Plus, StopCircle } from "lucide-react";
 import { AIChatFormBody } from "./ai-chat-form-body";
 import { AlertBanner, BannerWrapper } from "./alert-banner";
+import { EnhancePromptButton } from "./enhance-prompt-button";
 import { ImageUploader } from "./image-uploader";
 
 type ThemeGenerationPayload = {
@@ -49,12 +51,24 @@ export function ChatInput({
     clearUploadedImages,
     isSomeImageUploading,
     isUserDragging,
+    isInitializing,
   } = useAIChatForm();
 
   const handleNewChat = () => {
     startNewChat();
     clearLocalDraft();
     clearUploadedImages();
+  };
+
+  const { startEnhance, stopEnhance, enhancedPromptAsJsonContent, isEnhancingPrompt } =
+    useAIEnhancePrompt();
+
+  const handleEnhancePrompt = () => {
+    if (!checkValidSession() || !checkValidSubscription()) return; // Act as an early return;
+
+    // Only send images that are not loading, and strip loading property
+    const images = uploadedImages.filter((img) => !img.loading).map(({ url }) => ({ url }));
+    startEnhance({ ...promptData, images });
   };
 
   const generateTheme = async (payload: ThemeGenerationPayload) => {
@@ -108,7 +122,14 @@ export function ChatInput({
       <div className="bg-background relative isolate z-10 flex size-full min-h-[100px] flex-1 flex-col gap-2 overflow-hidden rounded-lg border p-2 shadow-xs">
         <AIChatFormBody
           isUserDragging={isUserDragging}
-          disabled={isGeneratingTheme}
+          disabled={isEnhancingPrompt}
+          canSubmit={
+            !isGeneratingTheme &&
+            !isEnhancingPrompt &&
+            !isEmptyPrompt &&
+            !isSomeImageUploading &&
+            !isInitializing
+          }
           uploadedImages={uploadedImages}
           handleImagesUpload={handleImagesUpload}
           handleImageRemove={handleImageRemove}
@@ -116,6 +137,7 @@ export function ChatInput({
           handleGenerate={handleGenerateSubmit}
           initialEditorContent={editorContentDraft ?? undefined}
           textareaKey={editorContentDraft ? "with-draft" : "no-draft"}
+          externalEditorContent={isEnhancingPrompt ? enhancedPromptAsJsonContent : undefined}
         />
         <div className="@container/form flex items-center justify-between gap-2">
           <TooltipWrapper label="Create new chat" asChild>
@@ -123,7 +145,9 @@ export function ChatInput({
               variant="outline"
               size="sm"
               onClick={handleNewChat}
-              disabled={isGeneratingTheme || messages.length === 0}
+              disabled={
+                isGeneratingTheme || isEnhancingPrompt || isInitializing || messages.length === 0
+              }
               className="flex items-center gap-1.5 shadow-none"
             >
               <Plus />
@@ -132,12 +156,23 @@ export function ChatInput({
           </TooltipWrapper>
 
           <div className="flex items-center gap-2">
+            {promptData?.content ? (
+              <EnhancePromptButton
+                isEnhancing={isEnhancingPrompt}
+                onStart={handleEnhancePrompt}
+                onStop={stopEnhance}
+                disabled={isGeneratingTheme || isInitializing}
+              />
+            ) : null}
+
             <ImageUploader
               fileInputRef={fileInputRef}
               onImagesUpload={handleImagesUpload}
               onClick={() => fileInputRef.current?.click()}
               disabled={
                 isGeneratingTheme ||
+                isEnhancingPrompt ||
+                isInitializing ||
                 uploadedImages.some((img) => img.loading) ||
                 uploadedImages.length >= MAX_IMAGE_FILES
               }
@@ -161,7 +196,13 @@ export function ChatInput({
                   size="sm"
                   className="size-8 shadow-none"
                   onClick={handleGenerateSubmit}
-                  disabled={isEmptyPrompt || isSomeImageUploading || isGeneratingTheme}
+                  disabled={
+                    isEmptyPrompt ||
+                    isSomeImageUploading ||
+                    isGeneratingTheme ||
+                    isEnhancingPrompt ||
+                    isInitializing
+                  }
                 >
                   {isGeneratingTheme ? <LoaderIcon className="animate-spin" /> : <ArrowUp />}
                 </Button>

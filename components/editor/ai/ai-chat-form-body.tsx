@@ -21,24 +21,28 @@ const CustomTextarea = dynamic(() => import("@/components/editor/custom-textarea
 interface AIChatFormBodyProps {
   isUserDragging: boolean;
   disabled: boolean;
+  canSubmit: boolean;
   uploadedImages: { url: string; loading: boolean }[];
   handleImagesUpload: (files: File[]) => void;
   handleImageRemove: (index: number) => void;
   handleContentChange: (jsonContent: JSONContent) => void;
   handleGenerate: () => void;
   initialEditorContent: JSONContent | undefined;
+  externalEditorContent?: JSONContent;
   textareaKey?: string | number;
 }
 
 export function AIChatFormBody({
   isUserDragging,
   disabled,
+  canSubmit,
   uploadedImages,
   handleImagesUpload,
   handleImageRemove,
   handleContentChange,
   handleGenerate,
   initialEditorContent,
+  externalEditorContent,
   textareaKey,
 }: AIChatFormBodyProps) {
   return (
@@ -78,9 +82,11 @@ export function AIChatFormBody({
             onContentChange={handleContentChange}
             onSubmit={handleGenerate}
             disabled={disabled}
+            canSubmit={canSubmit}
             characterLimit={AI_PROMPT_CHARACTER_LIMIT}
             onImagesPaste={handleImagesUpload}
             initialEditorContent={initialEditorContent}
+            externalEditorContent={externalEditorContent}
           />
         </div>
       </div>
