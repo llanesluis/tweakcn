@@ -4,6 +4,9 @@ import { baseProviderOptions, MODELS } from "@/utils/ai/providers";
 import { smoothStream, streamText } from "ai";
 
 export async function POST(req: Request) {
+  // TODO: Add session and subscription check, this should be a Pro only feature
+  // TODO: Record AI usage, providing the model id to `recordAIUsage` function
+
   const body = await req.json();
   const { prompt: _prompt, promptData }: { prompt: string; promptData: AIPromptData } = body;
   const userContentParts = buildUserContentPartsFromPromptData(promptData);

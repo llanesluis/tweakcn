@@ -64,6 +64,7 @@ export function ChatInput({
     useAIEnhancePrompt();
 
   const handleEnhancePrompt = () => {
+    // TODO: Add subscription check, this should be a Pro only feature
     if (!checkValidSession() || !checkValidSubscription()) return; // Act as an early return;
 
     // Only send images that are not loading, and strip loading property
@@ -156,6 +157,7 @@ export function ChatInput({
           </TooltipWrapper>
 
           <div className="flex items-center gap-2">
+            {/* TODO: This should be a Pro only feature */}
             {promptData?.content ? (
               <EnhancePromptButton
                 isEnhancing={isEnhancingPrompt}

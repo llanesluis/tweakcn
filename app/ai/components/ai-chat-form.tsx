@@ -43,6 +43,15 @@ export function AIChatForm({
   const { startEnhance, stopEnhance, enhancedPromptAsJsonContent, isEnhancingPrompt } =
     useAIEnhancePrompt();
 
+  const handleEnhancePrompt = () => {
+    // TODO: Add subscription check, this should be a Pro only feature
+    if (!checkValidSession() || !checkValidSubscription()) return; // Act as an early return;
+
+    // Only send images that are not loading, and strip loading property
+    const images = uploadedImages.filter((img) => !img.loading).map(({ url }) => ({ url }));
+    startEnhance({ ...promptData, images });
+  };
+
   const handleGenerate = async () => {
     if (!checkValidSession() || !checkValidSubscription()) return; // Act as an early return
 
@@ -60,14 +69,6 @@ export function AIChatForm({
     });
 
     clearLocalDraft();
-  };
-
-  const handleEnhancePrompt = () => {
-    if (!checkValidSession() || !checkValidSubscription()) return; // Act as an early return;
-
-    // Only send images that are not loading, and strip loading property
-    const images = uploadedImages.filter((img) => !img.loading).map(({ url }) => ({ url }));
-    startEnhance({ ...promptData, images });
   };
 
   return (
@@ -107,6 +108,7 @@ export function AIChatForm({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* TODO: This should be a Pro only feature */}
             {promptData?.content ? (
               <EnhancePromptButton
                 isEnhancing={isEnhancingPrompt}
