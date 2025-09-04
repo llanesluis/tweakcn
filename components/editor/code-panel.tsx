@@ -196,7 +196,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
           </div>
         </div>
       </div>
-      <div className="relative isolate mb-4 flex items-center justify-between gap-2 bg-red-800">
+      <div className="relative isolate mb-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Select
             value={tailwindVersion}
