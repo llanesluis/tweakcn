@@ -1,3 +1,10 @@
+import {
+  Tabs,
+  TabsContent,
+  TabsIndicator,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/base-ui-tabs";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -9,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDialogActions } from "@/hooks/use-dialog-actions";
 import { useEditorStore } from "@/store/editor-store";
 import { usePreferencesStore } from "@/store/preferences-store";
@@ -142,7 +148,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
   );
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="isolate flex h-full flex-col">
       <div className="mb-4 flex-none">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Theme Code</h2>
@@ -190,8 +196,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
           </div>
         </div>
       </div>
-
-      <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="relative isolate mb-4 flex items-center justify-between gap-2 bg-red-800">
         <div className="flex items-center gap-2">
           <Select
             value={tailwindVersion}
@@ -202,19 +207,19 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
               }
             }}
           >
-            <SelectTrigger className="bg-muted/50 h-8 w-fit gap-1 border-none outline-hidden focus:border-none focus:ring-transparent">
+            <SelectTrigger className="bg-muted/50 w-fit gap-1 border-none outline-hidden focus:border-none focus:ring-transparent">
               <SelectValue className="focus:ring-transparent" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-99999">
               <SelectItem value="3">Tailwind v3</SelectItem>
               <SelectItem value="4">Tailwind v4</SelectItem>
             </SelectContent>
           </Select>
           <Select value={colorFormat} onValueChange={(value: ColorFormat) => setColorFormat(value)}>
-            <SelectTrigger className="bg-muted/50 h-8 w-fit gap-1 border-none outline-hidden focus:border-none focus:ring-transparent">
+            <SelectTrigger className="bg-muted/50 w-fit gap-1 border-none outline-hidden focus:border-none focus:ring-transparent">
               <SelectValue className="focus:ring-transparent" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-99999">
               {getAvailableColorFormats().map((colorFormat) => (
                 <SelectItem key={colorFormat} value={colorFormat}>
                   {colorFormat}
@@ -232,7 +237,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
             </Button>
           </PopoverTrigger>
 
-          <PopoverContent align="end" className="w-[300px] space-y-2">
+          <PopoverContent align="end" className="z-99999 w-[300px] space-y-2">
             <div className="flex justify-between gap-4 rounded-lg">
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium">Include font variables</span>
@@ -267,6 +272,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
                 tailwind.config.ts
               </TabsTrigger>
             )}
+            <TabsIndicator className="bg-background rounded-sm" />
           </TabsList>
 
           <div className="flex items-center gap-2">
@@ -297,7 +303,8 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
             <pre className="h-full p-4 text-sm">
               <code>{code}</code>
             </pre>
-            <ScrollBar />
+            <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
         </TabsContent>
 
@@ -307,7 +314,8 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
               <pre className="h-full p-4 text-sm">
                 <code>{configCode}</code>
               </pre>
-              <ScrollBar />
+              <ScrollBar orientation="horizontal" />
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
           </TabsContent>
         )}
