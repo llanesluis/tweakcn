@@ -3,15 +3,28 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, Heart } from "lucide-react";
 import { ThemeEditorState } from "@/types/editor";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
-import { ColorFormat } from "../../types";
-import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "../ui/select";
+// import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  TabsIndicator,
+} from "@/components/ui/base-ui-tabs";
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
 import { usePostHog } from "posthog-js/react";
 import { useEditorStore } from "@/store/editor-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { generateThemeCode, generateTailwindConfigCode } from "@/utils/theme-style-generator";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 import { useDialogActions } from "@/hooks/use-dialog-actions";
+import { ColorFormat } from "@/types";
 
 interface CodePanelProps {
   themeEditorState: ThemeEditorState;
@@ -20,6 +33,7 @@ interface CodePanelProps {
 const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
   const [registryCopied, setRegistryCopied] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("index.css");
   const posthog = usePostHog();
   const { handleSaveClick } = useDialogActions();
 
@@ -166,13 +180,14 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
             setTailwindVersion(value);
             if (value === "4" && colorFormat === "hsl") {
               setColorFormat("oklch");
+              setActiveTab("index.css");
             }
           }}
         >
           <SelectTrigger className="bg-muted/50 w-fit gap-1 border-none outline-hidden focus:border-none focus:ring-transparent">
             <SelectValue className="focus:ring-transparent" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-99999">
             <SelectItem value="3">Tailwind v3</SelectItem>
             <SelectItem value="4">Tailwind v4</SelectItem>
           </SelectContent>
@@ -181,7 +196,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
           <SelectTrigger className="bg-muted/50 w-fit gap-1 border-none outline-hidden focus:border-none focus:ring-transparent">
             <SelectValue className="focus:ring-transparent" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-99999">
             {getAvailableColorFormats().map((colorFormat) => (
               <SelectItem key={colorFormat} value={colorFormat}>
                 {colorFormat}
@@ -191,6 +206,8 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
         </Select>
       </div>
       <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
         defaultValue="index.css"
         className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border"
       >
@@ -204,13 +221,14 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
                 tailwind.config.ts
               </TabsTrigger>
             )}
+            <TabsIndicator className="bg-background rounded-sm" />
           </TabsList>
 
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => copyToClipboard(code)}
+              onClick={() => copyToClipboard(activeTab === "index.css" ? code : configCode)}
               className="h-8"
               aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
             >
@@ -234,7 +252,8 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
             <pre className="h-full p-4 text-sm">
               <code>{code}</code>
             </pre>
-            <ScrollBar />
+            <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
         </TabsContent>
 
@@ -244,7 +263,8 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
               <pre className="h-full p-4 text-sm">
                 <code>{configCode}</code>
               </pre>
-              <ScrollBar />
+              <ScrollBar orientation="horizontal" />
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
           </TabsContent>
         )}
