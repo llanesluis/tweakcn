@@ -257,6 +257,7 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
+        defaultValue={EXPORT_CODE_TABS.CSS_CODE}
         className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border"
       >
         <div className="bg-muted/50 flex flex-none items-center justify-between border-b px-4 py-2">
@@ -279,7 +280,9 @@ const CodePanel: React.FC<CodePanelProps> = ({ themeEditorState }) => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => copyToClipboard(code)}
+              onClick={() =>
+                copyToClipboard(activeTab === EXPORT_CODE_TABS.CSS_CODE ? code : configCode)
+              }
               className="h-8 max-md:w-8"
               aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
             >
