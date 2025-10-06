@@ -5,14 +5,13 @@ import { useChatContext } from "@/hooks/use-chat-context";
 import { useGuards } from "@/hooks/use-guards";
 import { usePostLoginAction } from "@/hooks/use-post-login-action";
 import { toast } from "@/hooks/use-toast";
-import { MAX_MESSAGES_WINDOW } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { AIPromptData } from "@/types/ai";
-import { BrainCircuit } from "lucide-react";
 import dynamic from "next/dynamic";
 import React from "react";
 import { ChatInput } from "./chat-input";
 import { ClosableSuggestedPillActions } from "./closeable-suggested-pill-actions";
+import { ContextLimitReachedAlert } from "./context-limit-reached-alert";
 
 const Messages = dynamic(() => import("./messages").then((mod) => mod.Messages), {
   ssr: false,
@@ -96,18 +95,7 @@ export function ChatInterface() {
 
   return (
     <section className="@container relative isolate z-1 mx-auto flex size-full max-w-[49rem] flex-1 flex-col justify-center">
-      {messages.length >= MAX_MESSAGES_WINDOW && (
-        <div className="bg-muted flex flex-col gap-0.5 border-y px-4 py-2">
-          <p className="flex items-center gap-1 text-sm font-medium">
-            <BrainCircuit className="size-3.5" />
-            Context window limited
-          </p>
-          <p className="text-muted-foreground text-xs text-pretty">
-            Only the last 10 messages are sent to the model. For a fresh context window, consider
-            starting a new chat.
-          </p>
-        </div>
-      )}
+      <ContextLimitReachedAlert messageCount={messages.length} />
 
       <div
         className={cn(
