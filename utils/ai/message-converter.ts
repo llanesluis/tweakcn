@@ -64,17 +64,25 @@ export async function convertMessagesToModelMessages(
 ): Promise<ModelMessage[]> {
   const modelMessages: ModelMessage[] = [];
 
-  for (const message of messages) {
+  // Only include the most recent assistant themeStyles to avoid exponential growth.
+  let latestAssistantWithThemeIndex = -1;
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i];
+    if (m.role === "assistant" && m.metadata?.themeStyles) {
+      latestAssistantWithThemeIndex = i;
+    }
+  }
+
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i];
     const promptData = message.metadata?.promptData;
-    const themeStyles = message.metadata?.themeStyles;
 
     const msgTextContent = message.parts
       .map((part) => (part.type === "text" ? part.text : ""))
       .join("");
 
     if (message.role === "user" && promptData) {
-      const userContentParts = buildUserContentPartsFromPromptData(promptData);
-
+      const userContentParts: UserContent = buildUserContentPartsFromPromptData(promptData);
       modelMessages.push({
         role: "user",
         content: userContentParts,
@@ -88,13 +96,18 @@ export async function convertMessagesToModelMessages(
         text: msgTextContent,
       });
 
-      // If the assistant message has themeStyles attached to the metadata,
-      // we need to add it to the assistant content to provide more context for the next generations
-      if (themeStyles) {
-        assistantContentParts.push({
-          type: "text",
-          text: JSON.stringify(themeStyles),
-        });
+      // Attach themeStyles JSON only for the latest assistant message that has it.
+      // We do this to avoid attaching the `themeStyles` object to every assistant message that generated a theme
+      // Assistant text responses already include useful information about the plans and changes made,
+      // so we ** might not need** to attach the `themeStyles` object to every message.
+      if (i === latestAssistantWithThemeIndex) {
+        const themeStyles = message.metadata?.themeStyles;
+        if (themeStyles) {
+          assistantContentParts.push({
+            type: "text",
+            text: JSON.stringify(themeStyles),
+          });
+        }
       }
 
       modelMessages.push({

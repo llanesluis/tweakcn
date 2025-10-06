@@ -2,6 +2,7 @@ import { recordAIUsage } from "@/actions/ai-usage";
 import { THEME_GENERATION_TOOLS } from "@/lib/ai/generate-theme/tools";
 import { GENERATE_THEME_SYSTEM } from "@/lib/ai/prompts";
 import { baseProviderOptions, myProvider } from "@/lib/ai/providers";
+import { MAX_MESSAGES_WINDOW } from "@/lib/constants";
 import { handleError } from "@/lib/error-response";
 import { getCurrentUserId, logError } from "@/lib/shared";
 import { validateSubscriptionAndUsage } from "@/lib/subscription";
@@ -49,7 +50,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { messages }: { messages: ChatMessage[] } = await req.json();
-    const modelMessages = await convertMessagesToModelMessages(messages);
+    const trimmedMessages = messages.slice(-MAX_MESSAGES_WINDOW); // Trim the messages to avoid exponential growth
+    const modelMessages = await convertMessagesToModelMessages(trimmedMessages);
 
     const stream = createUIMessageStream<ChatMessage>({
       execute: ({ writer }) => {
@@ -63,7 +65,7 @@ export async function POST(req: NextRequest) {
           system: GENERATE_THEME_SYSTEM,
           messages: modelMessages,
           tools: THEME_GENERATION_TOOLS,
-          stopWhen: stepCountIs(5),
+          stopWhen: stepCountIs(2),
           onError: (error) => {
             if (error instanceof Error) console.error(error);
           },

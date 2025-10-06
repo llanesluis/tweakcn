@@ -7,5 +7,6 @@ export const AI_REQUEST_FREE_TIER_LIMIT = 5;
 export const MAX_IMAGE_FILES = 2;
 export const MAX_IMAGE_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 export const MAX_SVG_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+export const MAX_MESSAGES_WINDOW = 10;
 
 export const MAX_FREE_THEMES = 10;
