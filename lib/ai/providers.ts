@@ -18,8 +18,8 @@ export const baseProviderOptions = {
 
 export const myProvider = customProvider({
   languageModels: {
-    base: google("gemini-2.5-flash"),
-    "theme-generation": google("gemini-2.5-flash"),
+    base: google("gemini-2.5-pro"),
+    "theme-generation": google("gemini-2.5-pro"),
     "prompt-enhancement": google("gemini-2.5-flash"),
   },
 });
