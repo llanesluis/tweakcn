@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const stream = createUIMessageStream<ChatMessage>({
       execute: ({ writer }) => {
         const context: AdditionalAIContext = { writer };
-        const model = myProvider.languageModel("theme-generation");
+        const model = myProvider.languageModel("base");
 
         const result = streamText({
           abortSignal: req.signal,
