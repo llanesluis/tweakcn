@@ -46,7 +46,7 @@ import React, { useEffect, useRef } from "react";
  * external website theming via the embed script.
  */
 
-const SCRIPT_URL = "https://tweakcn.com/live-preview.js";
+const SCRIPT_URL = "https://tweakcn.com/live-preview.min.js";
 
 // Code snippets for quick installation across common setups
 const HTML_SNIPPET = `<!-- Add inside <head> -->\n<script src="${SCRIPT_URL}"></script>`;
