@@ -197,7 +197,7 @@ function DynamicWebsitePreviewProvider({
       setTimeout(() => {
         // capturing after 1s delay so status is finalized
         posthog.capture("DYNAMIC_PREVIEW_LOADED", {
-          url: websitePreviewState.currentUrl,
+          previewUrl: websitePreviewState.currentUrl,
           status: statusRef.current,
         });
       }, 1000);
