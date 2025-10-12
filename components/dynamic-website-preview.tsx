@@ -259,7 +259,7 @@ function Controls() {
           placeholder={
             !allowCrossOrigin
               ? "Enter same-origin URL for direct theme injection"
-              : "Enter website URL (e.g., http://localhost:3000/login)"
+              : "Enter website URL (e.g. http://localhost:3000/login)"
           }
           value={inputUrl}
           onChange={(e) => setInputUrl(e.target.value)}
